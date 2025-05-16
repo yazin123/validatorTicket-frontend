@@ -93,14 +93,6 @@ export function QRScanner({ onScan, onError }) {
   };
 
   const handleScanSuccess = (decodedText) => {
-    // Play success sound
-    try {
-      const audio = new Audio('/sounds/success-340660.mp3');
-      audio.play().catch(e => console.log('Audio play error:', e));
-    } catch (error) {
-      console.log('Audio error:', error);
-    }
-
     // Try to parse as JSON
     try {
       let qrData;
@@ -111,14 +103,14 @@ export function QRScanner({ onScan, onError }) {
         qrData = decodedText;
       }
       
-      // Show success feedback
+      // Show QR detected toast
       toast.success('QR code detected!');
       console.log('QR Data:', qrData);
       
       // Increment scan count
       setScanCount(prev => prev + 1);
       
-      // Pass data to parent component
+      // Pass data to parent component for verification
       onScan(qrData);
       
       // Stop scanner after successful scan
@@ -248,4 +240,4 @@ export function QRScanner({ onScan, onError }) {
       )}
     </Card>
   )
-} 
+}

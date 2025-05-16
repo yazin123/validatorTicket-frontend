@@ -2,122 +2,133 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { toast } from 'react-hot-toast'
+import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
+import { toast } from 'react-hot-toast'
+import { FcGoogle } from 'react-icons/fc'
+import { useSearchParams } from 'next/navigation'
 
 export default function LoginPage() {
-  const { login, user } = useAuth()
-  const router = useRouter()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { login, handleGoogleAuth } = useAuth()
   const searchParams = useSearchParams()
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  })
-  const [loading, setLoading] = useState(false)
-
-  // Redirect if already logged in
+  
   useEffect(() => {
-    if (user) {
-      const redirectTo = user.role === 'admin' ? '/admin' : '/dashboard'
-      router.replace(redirectTo)
+    // Check for error messages from Google auth redirect
+    const error = searchParams.get('error')
+    if (error === 'auth_failed') {
+      toast.error('Authentication failed. Please try again.')
     }
-  }, [user, router])
+  }, [searchParams])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
-
+    setIsSubmitting(true)
+    
     try {
-      const result = await login(formData.email, formData.password)
-      if (!result.success) {
-        toast.error(result.error)
+      const result = await login(email, password)
+      
+      if (result.success) {
+        toast.success('Login successful!')
+      } else {
+        toast.error(result.error || 'Login failed. Please check your credentials.')
       }
     } catch (error) {
-      toast.error('An error occurred during login')
+      toast.error('An error occurred. Please try again.')
       console.error('Login error:', error)
     } finally {
-      setLoading(false)
+      setIsSubmitting(false)
     }
   }
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
+  const handleGoogleSignIn = () => {
+    handleGoogleAuth()
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="max-w-md w-full space-y-8 p-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <Link href="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
-              create a new account
-            </Link>
-          </p>
+    <div className="bg-background border border-border rounded-lg shadow-sm p-6">
+      <div className="text-center mb-6">
+        <h1 className="text-2xl font-bold">Welcome back</h1>
+        <p className="text-muted-foreground mt-1">Enter your credentials to access your account</p>
+      </div>
+
+      <div className="space-y-4">
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full flex items-center justify-center gap-2"
+          onClick={handleGoogleSignIn}
+        >
+          <FcGoogle size={20} />
+          Sign in with Google
+        </Button>
+        
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-border"></div>
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              Or sign in with email
+            </span>
+          </div>
         </div>
+      </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm space-y-4">
-            <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
-              </label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                placeholder="Email address"
-                value={formData.email}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-              />
-            </div>
+      <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium mb-1">
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+            placeholder="you@example.com"
+          />
+        </div>
+        <div>
+          <div className="flex justify-between items-center mb-1">
+            <label htmlFor="password" className="block text-sm font-medium">
+              Password
+            </label>
+            <Link href="/forgot-password" className="text-sm text-primary hover:underline">
+              Forgot password?
+            </Link>
           </div>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+            placeholder="••••••••"
+          />
+        </div>
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Signing in...' : 'Sign in'}
+        </Button>
+      </form>
 
-          <div className="flex items-center justify-between">
-            <div className="text-sm">
-              <Link href="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
-                Forgot your password?
-              </Link>
-            </div>
-          </div>
-
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={loading}
-          >
-            {loading ? 'Signing in...' : 'Sign in'}
-          </Button>
-        </form>
-      </Card>
+      <div className="mt-6 text-center">
+        <p className="text-sm text-muted-foreground">
+          Don't have an account?{' '}
+          <Link href="/register" className="text-primary hover:underline">
+            Register
+          </Link>
+        </p>
+      </div>
     </div>
   )
 }

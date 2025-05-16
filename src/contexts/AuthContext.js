@@ -19,12 +19,12 @@ export function AuthProvider({ children }) {
   // Handle protected routes
   useEffect(() => {
     if (!loading) {
-      const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password'];
-      const isPublicPath = publicPaths.includes(pathname);
+      const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password', '/auth/callback'];
+      const isPublicPath = publicPaths.some(path => pathname.startsWith(path));
 
       if (!user && !isPublicPath) {
-        router.replace('/login');
-      } else if (user && isPublicPath) {
+        // router.replace('/login');
+      } else if (user && isPublicPath && pathname !== '/auth/callback') {
         const redirectTo = user.role === 'admin' ? '/admin' : '/dashboard';
         router.replace(redirectTo);
       }
@@ -69,6 +69,37 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const handleGoogleAuth = () => {
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL || ''}/auth/google`;
+  };
+
+  const processGoogleCallback = async (token) => {
+    try {
+      if (!token) {
+        throw new Error('No token provided');
+      }
+      
+      // Set the token in local storage and API headers
+      localStorage.setItem('token', token);
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      // Fetch user data
+      const { data } = await api.get('/auth/me');
+      setUser(data);
+      localStorage.setItem('user', JSON.stringify(data));
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Google auth callback processing failed:', error);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      return {
+        success: false,
+        error: 'Authentication failed'
+      };
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -82,7 +113,9 @@ export function AuthProvider({ children }) {
     loading,
     login,
     logout,
-    checkAuth
+    checkAuth,
+    handleGoogleAuth,
+    processGoogleCallback
   };
 
   return (
@@ -98,4 +131,4 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-} 
+}
