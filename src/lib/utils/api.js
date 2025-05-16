@@ -56,15 +56,6 @@ export const ticketsAPI = {
   cancelTicket: (ticketId) => api.post('/tickets/cancel', { ticketId }),
 }
 
-// Exhibitions API
-export const exhibitionsAPI = {
-  getAllExhibitions: () => api.get('/exhibitions'),
-  getExhibitionById: (id) => api.get(`/exhibitions/${id}`),
-  getExhibitionEvents: (id) => api.get(`/exhibitions/${id}/events`),
-  createExhibition: (data) => api.post('/exhibitions', data),
-  updateExhibition: (id, data) => api.put(`/exhibitions/${id}`, data),
-  deleteExhibition: (id) => api.delete(`/exhibitions/${id}`),
-}
 
 // Payment API
 export const paymentsAPI = {

@@ -221,29 +221,7 @@ export function TicketVerification({ ticket, status, message, onMarkAsUsed }) {
               </div>
             </div>
 
-            {/* Exhibition Section */}
-            {ticket.exhibition && (
-              <div>
-                <h4 className="text-sm font-medium text-gray-900">Exhibition</h4>
-                <div className="mt-1 space-y-1">
-                  <p className="text-sm text-gray-900 font-medium">
-                    {typeof ticket.exhibition === 'object' ? ticket.exhibition.name : renderValue(ticket.exhibition)}
-                  </p>
-                  {ticket.exhibition?.venue && (
-                    <p className="text-sm text-gray-500 flex items-start">
-                      <BuildingStorefrontIcon className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                      {typeof ticket.exhibition.venue === 'object' 
-                        ? (ticket.exhibition.venue.name || JSON.stringify(ticket.exhibition.venue))
-                        : renderValue(ticket.exhibition.venue)
-                      }
-                    </p>
-                  )}
-                  {ticket.exhibition?.description && (
-                    <p className="text-sm text-gray-500">{renderValue(ticket.exhibition.description)}</p>
-                  )}
-                </div>
-              </div>
-            )}
+          
 
             {/* Events Section */}
             {ticket.events && ticket.events.length > 0 && (

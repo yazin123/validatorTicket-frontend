@@ -14,8 +14,8 @@ export default function CustomerHeader() {
 
   const navItems = [
     { name: 'Home', href: '/' },
-    { name: 'Exhibitions', href: '/exhibitions' },
-    { name: 'My Tickets', href: '/customer/tickets' },
+    { name: 'Events', href: '/events' },
+    { name: 'My Tickets', href: '/my-tickets' },
   ];
 
   const isActive = (path) => {
@@ -36,9 +36,8 @@ export default function CustomerHeader() {
             <Link
               key={item.name}
               href={item.href}
-              className={`text-sm font-medium transition-colors hover:text-primary ${
-                isActive(item.href) ? 'text-primary' : 'text-foreground/70'
-              }`}
+              className={`text-sm font-medium transition-colors hover:text-primary ${isActive(item.href) ? 'text-primary' : 'text-foreground/70'
+                }`}
             >
               {item.name}
             </Link>
@@ -48,7 +47,7 @@ export default function CustomerHeader() {
         {/* Actions */}
         <div className="flex items-center space-x-4">
           <ThemeToggle />
-          
+
           {user ? (
             <div className="hidden md:flex items-center space-x-4">
               <div className="text-sm font-medium">
@@ -96,15 +95,14 @@ export default function CustomerHeader() {
               <Link
                 key={item.name}
                 href={item.href}
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  isActive(item.href) ? 'text-primary' : 'text-foreground/70'
-                }`}
+                className={`text-sm font-medium transition-colors hover:text-primary ${isActive(item.href) ? 'text-primary' : 'text-foreground/70'
+                  }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 {item.name}
               </Link>
             ))}
-            
+
             {user ? (
               <>
                 <div className="text-sm font-medium pt-2 border-t border-border">

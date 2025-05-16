@@ -101,17 +101,17 @@ export default function StaffDashboard() {
                 <thead>
                   <tr className="border-b border-border">
                     <th className="text-left py-3 px-4 font-medium">Ticket ID</th>
-                    <th className="text-left py-3 px-4 font-medium">Exhibition</th>
+                    
                     <th className="text-left py-3 px-4 font-medium">User</th>
                     <th className="text-left py-3 px-4 font-medium">Verified At</th>
-                    <th className="text-left py-3 px-4 font-medium">Status</th>
+                    <th className="text-left py-3 px-4 font-medium">sStatus</th>
                   </tr>
                 </thead>
                 <tbody>
                   {stats.recentVerifications.map((verification) => (
                     <tr key={verification.id} className="border-b border-border hover:bg-secondary/20">
                       <td className="py-3 px-4">{verification.ticketId}</td>
-                      <td className="py-3 px-4">{verification.exhibition}</td>
+                     
                       <td className="py-3 px-4">{verification.user}</td>
                       <td className="py-3 px-4">{new Date(verification.verifiedAt).toLocaleString()}</td>
                       <td className="py-3 px-4">

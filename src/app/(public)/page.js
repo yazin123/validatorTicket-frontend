@@ -3,7 +3,6 @@
 import { Suspense, useState } from 'react';
 import ScienceScene from '@/components/three/ScienceScene';
 import ScienceContent from '@/components/ScienceContent';
-import ExhibitionsList from '@/components/ExhibitionsList';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/lib/query-client-provider';
 
@@ -72,13 +71,7 @@ export default function Home() {
               <ScienceContent />
             </section>
             
-            {/* Exhibitions Section */}
-            <section className="py-16 px-4 bg-white/10 backdrop-blur-lg">
-              <div className="max-w-7xl mx-auto">
-                <h2 className="text-3xl font-bold text-center mb-10 text-white">Current Exhibitions</h2>
-                <ExhibitionsList />
-              </div>
-            </section>
+        
             
             {/* Footer */}
             <footer className="py-10 px-4 bg-black/80 backdrop-blur-md border-t border-gray-700">
