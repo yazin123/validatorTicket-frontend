@@ -37,15 +37,22 @@ const StatusBadge = ({ status }) => {
 export default function TicketsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [view, setView] = useState('grid'); // 'grid' or 'list'
+  const [view, setView] = useState('grid');
+  const [page, setPage] = useState(1);
+  const limit = 12; // Number of tickets per page
 
-  const { data: ticketsData, isLoading, refetch } = useQuery({
-    queryKey: ['admin-tickets'],
+  // Fetch tickets data with pagination
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['admin-tickets', page, limit],
     queryFn: async () => {
-      const response = await api.get('/tickets');
+      const response = await api.get(`/admin/tickets?page=${page}&limit=${limit}`);
       return response.data;
     },
+    keepPreviousData: true,
   });
+
+  const tickets = data?.tickets || [];
+  const pagination = data?.pagination || { total: 0, page: 1, pages: 1, limit };
 
   const handleStatusChange = async (ticketId, newStatus) => {
     try {
@@ -73,23 +80,24 @@ export default function TicketsPage() {
     }
   };
 
-  const filteredTickets = ticketsData?.data?.filter(ticket => {
-    // Check if the ticket and its properties exist before filtering
+  // Filter tickets based on search and status
+  const filteredTickets = tickets.filter(ticket => {
     const ticketNumber = ticket.ticketNumber || '';
     const userName = ticket.purchasedBy?.name || '';
     const userEmail = ticket.purchasedBy?.email || '';
     const eventNames = ticket.events?.map(e => e.event?.name || '').join(' ') || '';
-    
-    const matchesSearch = 
+    const matchesSearch =
       ticketNumber.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
       userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       userEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
       eventNames.toLowerCase().includes(searchTerm.toLowerCase());
-    
     const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
-    
     return matchesSearch && matchesStatus;
-  }) || [];
+  });
+
+  // Pagination controls
+  const handlePrevPage = () => setPage((p) => Math.max(1, p - 1));
+  const handleNextPage = () => setPage((p) => Math.min(p + 1, pagination.pages));
 
   return (
     <div className="space-y-8 p-6">
@@ -114,8 +122,8 @@ export default function TicketsPage() {
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-semibold">Tickets</h2>
-            {ticketsData?.data && (
-              <Badge variant="outline">{ticketsData.data.length} Total</Badge>
+            {tickets && (
+              <Badge variant="outline">{tickets.length} Total</Badge>
             )}
           </div>
           
@@ -177,7 +185,7 @@ export default function TicketsPage() {
             {filteredTickets.map((ticket) => {
               // Get the first event if available
               const firstEvent = ticket.events && ticket.events.length > 0 ? ticket.events[0] : null;
-              const eventName = firstEvent?.event?.name || 'N/A';
+              const eventName = firstEvent?.event?.title || firstEvent?.event?.name || 'N/A';
               const eventCount = ticket.events?.length || 0;
               
               return (
@@ -215,7 +223,7 @@ export default function TicketsPage() {
                       
                       <div className="flex items-center gap-2 text-sm">
                         <CreditCard size={16} className="text-gray-400" />
-                        <span className="text-gray-700">${ticket.totalAmount || 'N/A'}</span>
+                        <span className="text-gray-700">₹{ticket.totalAmount || 'N/A'}</span>
                       </div>
                     </div>
                     
@@ -259,7 +267,7 @@ export default function TicketsPage() {
             {filteredTickets.map((ticket) => {
               // Get the first event if available
               const firstEvent = ticket.events && ticket.events.length > 0 ? ticket.events[0] : null;
-              const eventName = firstEvent?.event?.name || 'N/A';
+              const eventName = firstEvent?.event?.title || firstEvent?.event?.name || 'N/A';
               const eventCount = ticket.events?.length || 0;
               
               return (
@@ -296,7 +304,7 @@ export default function TicketsPage() {
                       
                       <div>
                         <p className="text-xs text-gray-500">Amount</p>
-                        <p className="text-sm font-medium">${ticket.totalAmount || 'N/A'}</p>
+                        <p className="text-sm font-medium">₹{ticket.totalAmount || 'N/A'}</p>
                       </div>
                     </div>
                     
@@ -333,30 +341,26 @@ export default function TicketsPage() {
           </div>
         )}
         
-        {/* Pagination could be added here */}
-        {ticketsData?.pagination && (
+        {pagination && (
           <div className="mt-6 flex items-center justify-between">
             <div className="text-sm text-gray-500">
-              Showing {((ticketsData.pagination.page - 1) * ticketsData.pagination.limit) + 1} to {Math.min(ticketsData.pagination.page * ticketsData.pagination.limit, ticketsData.pagination.total)} of {ticketsData.pagination.total} tickets
+              Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} tickets
             </div>
             <div className="flex items-center gap-2">
               <Button 
                 variant="outline" 
                 size="sm" 
-                disabled={ticketsData.pagination.page === 1}
-                onClick={() => {
-                  // Handle pagination
-                }}
+                disabled={pagination.page === 1}
+                onClick={handlePrevPage}
               >
                 Previous
               </Button>
+              <span className="px-2">Page {pagination.page} of {pagination.pages}</span>
               <Button 
                 variant="outline" 
                 size="sm" 
-                disabled={ticketsData.pagination.page === ticketsData.pagination.totalPages}
-                onClick={() => {
-                  // Handle pagination
-                }}
+                disabled={pagination.page === pagination.pages}
+                onClick={handleNextPage}
               >
                 Next
               </Button>

@@ -8,14 +8,17 @@ import { format } from 'date-fns';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { QRScanner } from '@/components/scanner/QRScanner';
 import { TicketVerification } from '@/components/scanner/TicketVerification';
-import { Camera, Ticket, FileDigit, Check, X } from 'lucide-react';
+import { Camera, Ticket, FileDigit, Check, X, User } from 'lucide-react';
 
 export default function ScanTicketsPage() {
   const [manualCode, setManualCode] = useState('');
-  const [verificationResult, setVerificationResult] = useState(null);
+  const [scanResult, setScanResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [scanMode, setScanMode] = useState('camera'); // 'camera' or 'manual'
   const [animateVerification, setAnimateVerification] = useState(false);
+  const [processingEvent, setProcessingEvent] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [selectedEvent, setSelectedEvent] = useState('');
   const resultRef = useRef(null);
 
   // Sound references
@@ -33,9 +36,22 @@ export default function ScanTicketsPage() {
     }
   };
 
+  // Fetch events on mount
+  useEffect(() => {
+    async function fetchEvents() {
+      try {
+        const res = await api.get('/admin/events?page=1&limit=100');
+        setEvents(res.data.events.filter(e => e.status === 'published'));
+      } catch (err) {
+        setEvents([]);
+      }
+    }
+    fetchEvents();
+  }, []);
+
   // Scroll to results when verification is completed
   useEffect(() => {
-    if (verificationResult && resultRef.current) {
+    if (scanResult && resultRef.current) {
       // Add animation class
       setAnimateVerification(true);
 
@@ -48,55 +64,40 @@ export default function ScanTicketsPage() {
       const timer = setTimeout(() => setAnimateVerification(false), 1000);
       return () => clearTimeout(timer);
     }
-  }, [verificationResult]);
+  }, [scanResult]);
 
   // This function is called when a QR code is scanned or manual code is submitted
   const handleVerify = async (qrData) => {
+    if (!selectedEvent) {
+      toast.error('Please select an event first.');
+      return;
+    }
     try {
       setLoading(true);
-      const response = await api.post('/tickets/verify', { qrData });
-
-      // Extract ticket data from the response
-      let ticketData = response.data.ticket || response.data.data || {};
-
-      // If ticket is not already an object, create an empty object
-      if (typeof ticketData !== 'object' || ticketData === null) {
-        console.warn('Ticket data is not an object:', ticketData);
-        ticketData = {};
-      }
-
-      // Create a status object based on the ticket data
-      const statusInfo = response.data.statusInfo || {};
-      const canBeUsed = statusInfo.canBeUsed || (ticketData.status === 'active');
-      const statusMessage = statusInfo.statusMessage || (canBeUsed ? 'Ticket verified successfully' : 'Ticket cannot be used');
-
-      // Set verification result
-      setVerificationResult({
+      setScanResult(null);
+      const response = await api.post('/tickets/verify', { qrData, eventId: selectedEvent });
+      
+      // Set verification result with user and their event tickets
+      setScanResult({
         status: 'success',
-        ticket: ticketData,
-        canBeUsed: canBeUsed,
-        message: statusMessage
+        user: response.data.user,
+        tickets: response.data.tickets || []
       });
 
-      // Play appropriate sound based on verification result
-      if (canBeUsed) {
-        playSound('success');
-        toast.success('Ticket verified successfully');
-      } else {
-        playSound('alert');
-        toast.error(statusMessage || 'Invalid ticket');
-      }
+      // Play success sound
+      playSound('success');
+      toast.success('User QR code verified successfully');
     } catch (error) {
       console.error('Verification error:', error);
 
       // Play alert sound for errors
       playSound('alert');
 
-      setVerificationResult({
+      setScanResult({
         status: 'error',
-        message: error.response?.data?.message || 'Failed to verify ticket'
+        message: error.response?.data?.message || 'Failed to verify QR code'
       });
-      toast.error(error.response?.data?.message || 'Failed to verify ticket');
+      toast.error(error.response?.data?.message || 'Failed to verify QR code');
     } finally {
       setLoading(false);
     }
@@ -107,33 +108,49 @@ export default function ScanTicketsPage() {
     toast.error('Error scanning QR code');
   };
 
-  const handleMarkAsUsed = async (ticketId) => {
+  const handleMarkAttended = async (ticketId, eventId) => {
     try {
-      // Refresh ticket data after marking as used
-      const response = await api.get(`/tickets/${ticketId}`);
-
-      // Verify ticket data structure
-      let updatedTicket = response.data.data;
-      if (typeof updatedTicket !== 'object' || updatedTicket === null) {
-        console.warn('Updated ticket data is not an object:', updatedTicket);
-        updatedTicket = {};
-      }
-
-      // Update the verification result with the updated ticket
-      setVerificationResult({
-        ...verificationResult,
-        ticket: updatedTicket,
-        message: 'Ticket has been marked as used'
+      setProcessingEvent(eventId);
+      
+      // Call API to mark event as attended
+      const response = await api.post('/tickets/mark-attended', { 
+        ticketId, 
+        eventId 
       });
 
-      toast.success('Ticket marked as used');
+      // Update the local state to reflect the change
+      setScanResult(prev => {
+        if (!prev || !prev.tickets) return prev;
+        
+        return {
+          ...prev,
+          tickets: prev.tickets.map(ticket => {
+            if (ticket.eventId === eventId && ticket.ticketId === ticketId) {
+              return {
+                ...ticket,
+                status: 'attended',
+                verifiedAt: new Date(),
+                canBeMarkedAttended: false
+              };
+            }
+            return ticket;
+          })
+        };
+      });
 
+      // Success notification
+      toast.success('Attendance marked successfully');
+      playSound('success');
+      
       // Visual celebration animation
       setAnimateVerification(true);
       setTimeout(() => setAnimateVerification(false), 1000);
     } catch (error) {
-      console.error('Error refreshing ticket:', error);
-      toast.error('Error refreshing ticket data');
+      console.error('Error marking attendance:', error);
+      toast.error(error.response?.data?.message || 'Failed to mark attendance');
+      playSound('alert');
+    } finally {
+      setProcessingEvent(null);
     }
   };
 
@@ -145,13 +162,169 @@ export default function ScanTicketsPage() {
     }
   };
 
+  // Format date to display in a user-friendly way
+  const formatDate = (dateString) => {
+    try {
+      return new Date(dateString).toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric'
+      });
+    } catch (e) {
+      return 'Invalid date';
+    }
+  };
+
   // Toggle between camera and manual entry
   const toggleScanMode = (mode) => {
     setScanMode(mode);
   };
 
+  // Render the scan results
+  const renderScanResults = () => {
+    if (!scanResult) return null;
+    
+    if (scanResult.status === 'error') {
+      return (
+        <div className="bg-red-50 border border-red-200 text-red-800 p-6 rounded-lg">
+          <div className="flex items-center mb-3">
+            <X className="mr-2 text-red-500" size={24} />
+            <h3 className="text-lg font-semibold">Verification Failed</h3>
+          </div>
+          <p>{scanResult.message}</p>
+        </div>
+      );
+    }
+    
+    const { user, tickets } = scanResult;
+    
+    return (
+      <div className={`bg-white border rounded-xl shadow-md overflow-hidden 
+                      ${animateVerification ? 'animate-pulse' : ''}`}>
+        {/* User Info Panel */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold">{user.name}</h3>
+              <p className="opacity-80 mt-1">{user.email}</p>
+              {user.phoneNumber && (
+                <p className="opacity-80">{user.phoneNumber}</p>
+              )}
+            </div>
+            <div className="bg-white/20 p-3 rounded-full">
+              <User className="h-8 w-8" />
+            </div>
+          </div>
+        </div>
+        
+        {/* Events List */}
+        <div className="p-4">
+          <h4 className="font-semibold text-lg mb-3">Event Tickets ({tickets.length})</h4>
+          
+          {tickets.length === 0 ? (
+            <p className="text-center py-4 text-gray-500">No event tickets found</p>
+          ) : (
+            <div className="space-y-4">
+              {tickets.map((ticket) => (
+                <div key={`${ticket.ticketId}-${ticket.eventId}`} 
+                  className={`border rounded-lg p-4 ${
+                    ticket.status === 'attended' 
+                      ? 'bg-green-50 border-green-200' 
+                      : ticket.canVerify
+                        ? 'bg-white border-gray-200'
+                        : 'bg-gray-50 border-gray-200'
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h5 className="font-semibold">{ticket.eventTitle}</h5>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {formatDate(ticket.startDate)} - {formatDate(ticket.endDate)}
+                      </p>
+                      <p className="text-sm text-gray-600">{ticket.eventVenue}</p>
+                      
+                      {ticket.status === 'attended' && (
+                        <div className="flex items-center mt-2 text-green-700 bg-green-100 px-2 py-1 rounded text-xs inline-block">
+                          <Check size={14} className="mr-1" />
+                          <span>
+                            Attended {ticket.verifiedAt ? `(${formatDate(ticket.verifiedAt)})` : ''}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {ticket.status === 'registered' && (
+                        <div className="flex items-center mt-2 text-blue-700 bg-blue-100 px-2 py-1 rounded text-xs inline-block">
+                          <Ticket size={14} className="mr-1" />
+                          <span>Registered</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Action buttons based on verification permissions */}
+                    <div>
+                      {ticket.canBeMarkedAttended && (
+                        <Button
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                          size="sm"
+                          onClick={() => handleMarkAttended(ticket.ticketId, ticket.eventId)}
+                          disabled={processingEvent === ticket.eventId}
+                        >
+                          {processingEvent === ticket.eventId ? (
+                            <span className="flex items-center">
+                              <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-r-transparent rounded-full"></div>
+                              Processing...
+                            </span>
+                          ) : (
+                            <span className="flex items-center">
+                              <Check size={16} className="mr-1" />
+                              Mark Attended
+                            </span>
+                          )}
+                        </Button>
+                      )}
+                      
+                      {!ticket.canVerify && ticket.status === 'registered' && (
+                        <div className="text-xs text-amber-700 bg-amber-100 px-2 py-1 rounded">
+                          Not assigned to this event
+                        </div>
+                      )}
+                      
+                      {!ticket.isEventActive && ticket.status === 'registered' && (
+                        <div className="text-xs text-gray-700 bg-gray-100 px-2 py-1 rounded mt-1">
+                          Event not active
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="max-w-9xl mx-auto px-4 py-6 space-y-6">
+      {/* Event select dropdown */}
+      <div className="mb-6">
+        <label className="block font-semibold mb-1 text-lg">Select Event <span className="text-red-500">*</span></label>
+        <select
+          className="input w-full max-w-md"
+          value={selectedEvent}
+          onChange={e => setSelectedEvent(e.target.value)}
+        >
+          <option value="">-- Select an event --</option>
+          {events.map(event => (
+            <option key={event._id} value={event._id}>
+              {event.title} ({new Date(event.startDate).toLocaleString()} - {new Date(event.endDate).toLocaleString()})
+            </option>
+          ))}
+        </select>
+      </div>
       {/* Header with animated gradient */}
       <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white p-6 shadow-lg">
         <div
@@ -200,6 +373,7 @@ export default function ScanTicketsPage() {
                 onClick={() => toggleScanMode('camera')}
                 className={`flex-1 py-3 px-4 font-medium text-center transition-colors flex items-center justify-center
                           ${scanMode === 'camera' ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-50'}`}
+                disabled={!selectedEvent}
               >
                 <Camera size={18} className="mr-2" />
                 Scan QR Code
@@ -208,6 +382,7 @@ export default function ScanTicketsPage() {
                 onClick={() => toggleScanMode('manual')}
                 className={`flex-1 py-3 px-4 font-medium text-center transition-colors flex items-center justify-center
                           ${scanMode === 'manual' ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-50'}`}
+                disabled={!selectedEvent}
               >
                 <FileDigit size={18} className="mr-2" />
                 Manual Entry
@@ -215,7 +390,11 @@ export default function ScanTicketsPage() {
             </div>
 
             <div className="p-6">
-              {scanMode === 'camera' ? (
+              {!selectedEvent ? (
+                <div className="text-center text-gray-500 py-8">
+                  <p className="text-lg">Please select an event to start scanning tickets.</p>
+                </div>
+              ) : scanMode === 'camera' ? (
                 <div className="space-y-4">
                   <h2 className="text-xl font-bold mb-4">Scan Ticket QR Code</h2>
                   <div className="rounded-lg overflow-hidden border border-gray-200">
@@ -236,6 +415,7 @@ export default function ScanTicketsPage() {
                         onChange={(e) => setManualCode(e.target.value)}
                         placeholder="Enter ticket code"
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-12"
+                        disabled={!selectedEvent}
                       />
                       {manualCode && (
                         <button
@@ -249,7 +429,7 @@ export default function ScanTicketsPage() {
                     </div>
                     <Button
                       type="submit"
-                      disabled={loading || !manualCode.trim()}
+                      disabled={loading || !manualCode.trim() || !selectedEvent}
                       className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all text-white font-medium rounded-lg flex items-center justify-center"
                     >
                       {loading ? (
@@ -285,11 +465,7 @@ export default function ScanTicketsPage() {
               </h2>
 
               <div className="min-h-52">
-                <TicketVerification
-                  {...verificationResult}
-                  onMarkAsUsed={handleMarkAsUsed}
-                  loading={loading}
-                />
+                {renderScanResults()}
               </div>
             </div>
           </div>
@@ -297,16 +473,18 @@ export default function ScanTicketsPage() {
       </div>
 
       {/* Status bar at bottom with latest scan result */}
-      {verificationResult && (
-        <div className={`fixed bottom-0 left-0 right-0 px-4 py-3 text-white text-center transform transition-transform duration-500 ${verificationResult?.canBeUsed ? 'bg-green-600' : 'bg-red-600'}`}>
+      {scanResult && (
+        <div className={`fixed bottom-0 left-0 right-0 px-4 py-3 text-white text-center transform transition-transform duration-500 ${scanResult.status === 'success' ? 'bg-blue-600' : 'bg-red-600'}`}>
           <div className="max-w-6xl mx-auto flex items-center justify-center">
-            {verificationResult?.canBeUsed ? (
-              <Check size={20} className="mr-2" />
+            {scanResult.status === 'success' ? (
+              <User size={20} className="mr-2" />
             ) : (
               <X size={20} className="mr-2" />
             )}
             <span className="font-medium">
-              {verificationResult?.message}
+              {scanResult.status === 'success' 
+                ? `User verified: ${scanResult.user.name} with ${scanResult.tickets.length} ticket(s)` 
+                : scanResult.message}
             </span>
           </div>
         </div>

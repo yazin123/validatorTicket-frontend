@@ -1,41 +1,17 @@
-'use client';
-
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import CustomerHeader from '@/components/ui/CustomerHeader';
+"use client";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function CustomerLayout({ children }) {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-
-  // Protect customer routes
-  useEffect(() => {
-    if (!loading && !user) {
-      router.replace('/login');
-    }
-  }, [user, loading, router]);
-
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-12 w-12 rounded-full border-4 border-t-primary border-r-transparent border-b-transparent border-l-transparent animate-spin"></div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null; // Don't render anything while redirecting
-  }
-
+  const pathname = usePathname();
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <CustomerHeader />
-      <main className="flex-1">
-        <div className="container mx-auto p-6">
-          {children}
-        </div>
-      </main>
+    <div className="min-h-screen bg-gray-50">
+      <nav className="bg-white shadow p-4 flex gap-6 justify-center mb-8">
+        <Link href="/customer/events" className={pathname.startsWith("/customer/events") ? "font-bold text-blue-600" : ""}>Events</Link>
+        <Link href="/customer/tickets" className={pathname.startsWith("/customer/tickets") ? "font-bold text-blue-600" : ""}>My Tickets</Link>
+        <Link href="/customer/profile" className={pathname.startsWith("/customer/profile") ? "font-bold text-blue-600" : ""}>Profile</Link>
+      </nav>
+      <main>{children}</main>
     </div>
   );
 } 

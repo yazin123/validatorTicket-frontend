@@ -21,21 +21,28 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import Link from 'next/link';
 
 export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentTab, setCurrentTab] = useState('all');
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
+  const [page, setPage] = useState(1);
+  const limit = 12; // Number of users per page
 
-  // Fetch users data
-  const { data: users, isLoading, refetch } = useQuery({
-    queryKey: ['admin-users'],
+  // Fetch users data with pagination
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['admin-users', page, limit],
     queryFn: async () => {
-      const response = await api.get('/admin/users');
+      const response = await api.get(`/admin/users?page=${page}&limit=${limit}`);
       return response.data;
     },
+    keepPreviousData: true,
   });
+
+  const users = data?.users || [];
+  const pagination = data?.pagination || { total: 0, page: 1, pages: 1, limit };
 
   // User role management
   const handleRoleChange = async (userId, newRole) => {
@@ -64,40 +71,23 @@ export default function UsersPage() {
   // Filter and sort users based on search term, tab, and sort options
   const filteredUsers = useMemo(() => {
     if (!users) return [];
-    
-    // First filter by search term
     let filtered = users.filter(user => 
       user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    
-    // Then filter by tab
     if (currentTab !== 'all') {
-      if (currentTab === 'active') {
-        filtered = filtered.filter(user => user.status === 'active');
-      } else if (currentTab === 'suspended') {
-        filtered = filtered.filter(user => user.status === 'suspended');
-      } else if (currentTab === 'admin') {
-        filtered = filtered.filter(user => user.role === 'admin');
-      } else if (currentTab === 'staff') {
-        filtered = filtered.filter(user => user.role === 'staff');
-      } else if (currentTab === 'user') {
-        filtered = filtered.filter(user => user.role === 'user');
-      }
+      if (currentTab === 'active') filtered = filtered.filter(user => user.status === 'active');
+      else if (currentTab === 'suspended') filtered = filtered.filter(user => user.status === 'suspended');
+      else if (currentTab === 'admin') filtered = filtered.filter(user => user.role === 'admin');
+      else if (currentTab === 'staff') filtered = filtered.filter(user => user.role === 'staff');
+      else if (currentTab === 'user') filtered = filtered.filter(user => user.role === 'user');
     }
-    
-    // Sort the results
     return filtered.sort((a, b) => {
       let comparison = 0;
-      if (sortBy === 'name') {
-        comparison = a.name.localeCompare(b.name);
-      } else if (sortBy === 'email') {
-        comparison = a.email.localeCompare(b.email);
-      } else if (sortBy === 'role') {
-        comparison = a.role.localeCompare(b.role);
-      } else if (sortBy === 'status') {
-        comparison = a.status.localeCompare(b.status);
-      }
+      if (sortBy === 'name') comparison = a.name.localeCompare(b.name);
+      else if (sortBy === 'email') comparison = a.email.localeCompare(b.email);
+      else if (sortBy === 'role') comparison = a.role.localeCompare(b.role);
+      else if (sortBy === 'status') comparison = a.status.localeCompare(b.status);
       return sortOrder === 'asc' ? comparison : -comparison;
     });
   }, [users, searchTerm, currentTab, sortBy, sortOrder]);
@@ -176,6 +166,10 @@ export default function UsersPage() {
     }
   };
 
+  // Pagination controls
+  const handlePrevPage = () => setPage((p) => Math.max(1, p - 1));
+  const handleNextPage = () => setPage((p) => Math.min(p + 1, pagination.pages));
+
   return (
     <div className="space-y-6 p-6 max-w-9xl mx-auto">
       {/* Header Section */}
@@ -192,8 +186,9 @@ export default function UsersPage() {
             Export
           </Button>
           <Button size="sm" variant="default">
-            <UserPlus size={16} className="mr-2" />
-            Add User
+          <Link className='flex items-center' href="/admin/users/add">
+          <UserPlus size={16} className="mr-2" />
+          Add User</Link>
           </Button>
         </div>
       </div>
@@ -442,6 +437,25 @@ export default function UsersPage() {
           </CardFooter>
         )}
       </Card>
+
+      {/* Pagination Controls */}
+      <div className="flex justify-center mt-8">
+        <button
+          onClick={handlePrevPage}
+          disabled={pagination.page === 1}
+          className="px-4 py-2 mx-1 rounded bg-gray-100 text-gray-700 disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <span className="px-4 py-2 mx-1">Page {pagination.page} of {pagination.pages}</span>
+        <button
+          onClick={handleNextPage}
+          disabled={pagination.page === pagination.pages}
+          className="px-4 py-2 mx-1 rounded bg-gray-100 text-gray-700 disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 }

@@ -67,7 +67,7 @@ export default function Home() {
             </section>
             
             {/* Science Facts Section */}
-            <section className="py-16 px-4 max-w-7xl mx-auto bg-black/70 backdrop-blur-md text-white">
+            <section className="py-16 px-4 max-w-9xl mx-auto bg-black/70 backdrop-blur-md text-white">
               <ScienceContent />
             </section>
             
@@ -75,7 +75,7 @@ export default function Home() {
             
             {/* Footer */}
             <footer className="py-10 px-4 bg-black/80 backdrop-blur-md border-t border-gray-700">
-              <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+              <div className="max-w-9xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
                 <div className="text-center md:text-left">
                   <p className="text-gray-400">&copy; 2025 Science Exhibitions. All rights reserved.</p>
                 </div>

@@ -37,14 +37,20 @@ export default function EventsPage() {
   const [sortBy, setSortBy] = useState('date');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [page, setPage] = useState(1);
+  const limit = 12; // Number of events per page
 
-  const { data: events, isLoading, refetch } = useQuery({
-    queryKey: ['admin-events'],
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['admin-events', page, limit],
     queryFn: async () => {
-      const response = await api.get('/admin/events');
+      const response = await api.get(`/admin/events?page=${page}&limit=${limit}`);
       return response.data;
     },
+    keepPreviousData: true,
   });
+
+  const events = data?.events || [];
+  const pagination = data?.pagination || { total: 0, page: 1, pages: 1, limit };
 
   const [eventStats, setEventStats] = useState({
     published: 0,
@@ -83,24 +89,22 @@ export default function EventsPage() {
   };
 
   // Filter and sort events
-  const filteredAndSortedEvents = events ? events
+  const filteredAndSortedEvents = events
     .filter(event => 
       (filterStatus === 'all' || event.status === filterStatus) &&
       (event.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       event.description?.toLowerCase().includes(searchTerm.toLowerCase()))
     )
     .sort((a, b) => {
-      if (sortBy === 'title') {
-        return a.title.localeCompare(b.title);
-      } else if (sortBy === 'revenue') {
-        return (b.price * b.ticketsSold) - (a.price * a.ticketsSold);
-      } else if (sortBy === 'tickets') {
-        return b.ticketsSold - a.ticketsSold;
-      } else {
-        // Default to date
-        return new Date(b.startDate || b.date) - new Date(a.startDate || a.date);
-      }
-    }) : [];
+      if (sortBy === 'title') return a.title.localeCompare(b.title);
+      else if (sortBy === 'revenue') return (b.price * b.ticketsSold) - (a.price * a.ticketsSold);
+      else if (sortBy === 'tickets') return b.ticketsSold - a.ticketsSold;
+      else return new Date(b.startDate || b.date) - new Date(a.startDate || a.date);
+    });
+
+  // Pagination controls
+  const handlePrevPage = () => setPage((p) => Math.max(1, p - 1));
+  const handleNextPage = () => setPage((p) => Math.min(p + 1, pagination.pages));
 
   const getStatusColor = (status) => {
     switch(status) {
@@ -148,7 +152,7 @@ export default function EventsPage() {
   };
 
   return (
-    <div className="space-y-8 max-w-9xl mx-auto px-4 py-8">
+    <div className="space-y-8 max-w-9xl mx-auto px-2 py-8">
       {/* Header with Stats */}
       <div className="flex flex-col gap-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -197,7 +201,7 @@ export default function EventsPage() {
               </div>
               <span className="text-xs font-medium text-violet-600 bg-violet-50 px-2 py-1 rounded-full">+{Math.floor(Math.random() * 20)}% this week</span>
             </div>
-            <p className="font-semibold text-2xl text-gray-900">${eventStats.totalRevenue.toLocaleString()}</p>
+            <p className="font-semibold text-2xl text-gray-900">₹{eventStats.totalRevenue.toLocaleString()}</p>
             <p className="text-sm text-gray-500 mt-1">Total Revenue</p>
           </div>
           
@@ -560,7 +564,7 @@ export default function EventsPage() {
                   </div>
                   
                   <div className="col-span-2 text-sm text-gray-600 font-medium">
-                    ${(event.price * event.ticketsSold).toLocaleString()}
+                    ₹{(event.price * event.ticketsSold).toLocaleString()}
                   </div>
                   
                   <div className="col-span-2">
@@ -578,20 +582,28 @@ export default function EventsPage() {
         )}
       </div>
 
-      {/* Pagination (simplified for this example) */}
-      <div className="flex items-center justify-between bg-white px-4 py-3 border border-gray-100 rounded-xl shadow-sm">
+      {/* Pagination Controls */}
+      <div className="flex items-center justify-between bg-white px-4 py-3 border border-gray-100 rounded-xl shadow-sm mt-6">
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <span>Showing <span className="font-medium">{filteredAndSortedEvents.length}</span> events</span>
         </div>
-        
         <div className="flex items-center gap-2">
-          <button className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm font-medium bg-white text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          <button
+            onClick={handlePrevPage}
+            disabled={pagination.page === 1}
+            className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm font-medium bg-white text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             Previous
           </button>
           <div className="px-3 py-1.5 border border-indigo-500 bg-indigo-50 rounded-lg text-sm font-medium text-indigo-600">
-            1
+            {pagination.page}
           </div>
-          <button className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm font-medium bg-white text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          <span className="text-sm">of {pagination.pages}</span>
+          <button
+            onClick={handleNextPage}
+            disabled={pagination.page === pagination.pages}
+            className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm font-medium bg-white text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             Next
           </button>
         </div>

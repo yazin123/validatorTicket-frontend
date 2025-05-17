@@ -22,6 +22,21 @@ import {
   Area,
   AreaChart
 } from 'recharts';
+import { 
+  ArrowUpRight, 
+  ArrowDownRight, 
+  Download, 
+  Filter, 
+  Calendar, 
+  CalendarRange,
+  Users,
+  Ticket,
+  DollarSign,
+  ChevronDown,
+  AlertCircle,
+  BarChart as BarChartIcon,
+  Activity
+} from 'lucide-react';
 
 export default function AdminDashboard() {
   // Use an object for date range state
@@ -146,64 +161,47 @@ export default function AdminDashboard() {
       value: stats?.users?.total || 0,
       change: stats?.users?.new || 0,
       changeLabel: 'new',
-      trend: stats?.users?.trend || 0,
+      trend: stats?.users?.change || 0,
       href: '/admin/users',
-      bgClass: 'bg-indigo-50 ',
-      iconClass: 'text-indigo-600 ',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-        </svg>
-      ),
+      bgClass: 'bg-indigo-50',
+      iconClass: 'text-indigo-600',
+      icon: <Users className="w-6 h-6" />,
     },
     {
       title: 'Total Events',
       value: stats?.events?.total || 0,
       change: stats?.events?.upcoming || 0,
       changeLabel: 'upcoming',
-      trend: stats?.events?.trend || 5,
+      trend: stats?.events?.change || 0,
       href: '/admin/events',
-      bgClass: 'bg-purple-50 ',
-      iconClass: 'text-purple-600 ',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-        </svg>
-      ),
+      bgClass: 'bg-purple-50',
+      iconClass: 'text-purple-600',
+      icon: <Calendar className="w-6 h-6" />,
     },
     {
       title: 'Total Tickets',
       value: stats?.tickets?.total || 0,
       change: stats?.tickets?.active || 0,
       changeLabel: 'active',
-      trend: stats?.tickets?.trend || 12,
+      trend: stats?.tickets?.change || 0,
       href: '/admin/tickets',
-      bgClass: 'bg-pink-50 ',
-      iconClass: 'text-pink-600 ',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z" />
-        </svg>
-      ),
+      bgClass: 'bg-pink-50',
+      iconClass: 'text-pink-600',
+      icon: <Ticket className="w-6 h-6" />,
     },
     {
       title: 'Total Revenue',
       value: formatCurrency(stats?.revenue?.total || 0),
       change: formatCurrency(stats?.revenue?.period || 0),
       changeLabel: 'this period',
-      trend: stats?.revenue?.trend || 8,
-      href: '/admin/finance',
-      bgClass: 'bg-rose-50 ',
-      iconClass: 'text-rose-600 ',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
+      trend: stats?.revenue?.change || 0,
+      href: '/admin/reports',
+      bgClass: 'bg-rose-50',
+      iconClass: 'text-rose-600',
+      icon: <DollarSign className="w-6 h-6" />,
     },
   ];
 
-  // Format helpers
   function formatCurrency(amount) {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -213,490 +211,412 @@ export default function AdminDashboard() {
   }
 
   function formatDate(dateStr) {
-    if (!dateStr) return '';
-    return format(new Date(dateStr), 'MMM d, yyyy');
+    try {
+      return format(new Date(dateStr), 'MMM d');
+    } catch (error) {
+      return dateStr || '';
+    }
   }
 
-  // Date range presets
-  const timeRangePresets = [
-    { value: 'today', label: 'Today' },
-    { value: 'yesterday', label: 'Yesterday' },
-    { value: 'last7days', label: 'Last 7 Days' },
-    { value: 'last30days', label: 'Last 30 Days' },
-    { value: 'thisMonth', label: 'This Month' },
-    { value: 'lastMonth', label: 'Last Month' },
-    { value: 'thisYear', label: 'This Year' },
-    { value: 'custom', label: 'Custom Range' },
-  ];
-
-  // Initialize with default preset
-  useEffect(() => {
-    applyPreset('last30days');
-  }, []);
-
-  // Generate trend arrow based on number
   const renderTrendArrow = (trend) => {
     if (trend > 0) {
       return (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-emerald-500">
-          <path fillRule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clipRule="evenodd" />
-        </svg>
+        <div className="flex items-center text-emerald-600">
+          <ArrowUpRight size={16} className="mr-1" />
+          <span>{Math.abs(trend)}%</span>
+        </div>
       );
     } else if (trend < 0) {
       return (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-rose-500">
-          <path fillRule="evenodd" d="M10 3a.75.75 0 01.75.75v10.638l3.96-4.158a.75.75 0 111.08 1.04l-5.25 5.5a.75.75 0 01-1.08 0l-5.25-5.5a.75.75 0 111.08-1.04l3.96 4.158V3.75A.75.75 0 0110 3z" clipRule="evenodd" />
-        </svg>
+        <div className="flex items-center text-rose-600">
+          <ArrowDownRight size={16} className="mr-1" />
+          <span>{Math.abs(trend)}%</span>
+        </div>
       );
     } else {
       return (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-gray-500">
-          <path fillRule="evenodd" d="M4 10a.75.75 0 01.75-.75h10.5a.75.75 0 010 1.5H4.75A.75.75 0 014 10z" clipRule="evenodd" />
-        </svg>
+        <div className="flex items-center text-gray-600">
+          <span>0%</span>
+        </div>
       );
     }
   };
-  
-  // Format trend percentage
+
   const formatTrendPercentage = (trend) => {
-    const trendAbs = Math.abs(trend);
-    return `${trendAbs}%`;
+    if (trend === undefined || trend === null) return '0%';
+    
+    const prefix = trend > 0 ? '+' : '';
+    return `${prefix}${trend}%`;
   };
 
   return (
-    <div className="min-h-screen   ">
-      <div className="max-w-9xl mx-auto space-y-8">
-        <div className="bg-white  rounded-2xl shadow-sm border border-gray-100  p-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 ">Dashboard</h1>
-              <p className="text-gray-500  mt-1">
-                An overview of your event system performance
-              </p>
-            </div>
+    <div className="space-y-6">
+      {/* Header with Date Range Controls */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div>
+          <h1 className="text-2xl font-bold">Dashboard Overview</h1>
+          <p className="text-muted-foreground mt-1">
+            Monitor key metrics and performance indicators at a glance
+          </p>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          {/* Date Range Selector */}
+          <div className="relative w-full sm:w-auto">
+            <button
+              onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
+              className="w-full flex items-center justify-between gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+            >
+              <div className="flex items-center">
+                <Calendar className="mr-2 h-4 w-4 text-gray-500" />
+                <span className="text-sm">
+                  {formatDate(dateRange.startDate)} - {formatDate(dateRange.endDate)}
+                </span>
+              </div>
+              <ChevronDown className="h-4 w-4 text-gray-500" />
+            </button>
             
-            {/* Modern Date Range Picker */}
-            <div className="relative">
-              <button 
-                onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-                className="flex items-center space-x-2 bg-white  border border-gray-200  rounded-lg px-4 py-2 text-sm text-gray-700  hover:bg-gray-50  transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-500">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                </svg>
-                <span>{formatDate(dateRange.startDate)} - {formatDate(dateRange.endDate)}</span>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-gray-500">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                </svg>
-              </button>
-              
-              {isDatePickerOpen && (
-                <div className="absolute right-0 mt-2 w-72 bg-white  rounded-lg shadow-lg border border-gray-200  z-10">
-                  <div className="p-4">
-                    <h4 className="font-medium text-gray-900  text-sm mb-3">Date Range</h4>
-                    
-                    <div className="space-y-3">
-                      {/* Presets */}
-                      <div className="grid grid-cols-2 gap-2">
-                        {timeRangePresets.slice(0, 6).map((preset) => (
-                          <button
-                            key={preset.value}
-                            onClick={() => {
-                              applyPreset(preset.value);
-                              if (preset.value !== 'custom') setIsDatePickerOpen(false);
-                            }}
-                            className={`text-sm px-3 py-1.5 rounded-md transition-colors ${
-                              selectedPreset === preset.value
-                                ? 'bg-indigo-100  text-indigo-700 '
-                                : 'text-gray-700  hover:bg-gray-100 '
-                            }`}
-                          >
-                            {preset.label}
-                          </button>
-                        ))}
+            {isDatePickerOpen && (
+              <div className="absolute right-0 z-10 mt-2 w-80 p-4 bg-white rounded-lg border border-gray-200 shadow-lg">
+                <div className="space-y-4">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium">Date Range</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-xs text-gray-500 mb-1 block">Start Date</label>
+                        <input
+                          type="date"
+                          name="startDate"
+                          value={dateRange.startDate}
+                          onChange={handleDateChange}
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded"
+                        />
                       </div>
-                      
-                      {/* Custom Range Fields */}
-                      <div className="space-y-2 pt-2 border-t border-gray-200 ">
-                        <div className="flex flex-col">
-                          <label htmlFor="startDate" className="text-xs text-gray-500  mb-1">Start Date</label>
-                          <input
-                            type="date"
-                            id="startDate"
-                            name="startDate"
-                            value={dateRange.startDate}
-                            onChange={handleDateChange}
-                            className="border border-gray-200   rounded-md text-sm px-3 py-2"
-                          />
-                        </div>
-                        
-                        <div className="flex flex-col">
-                          <label htmlFor="endDate" className="text-xs text-gray-500  mb-1">End Date</label>
-                          <input
-                            type="date"
-                            id="endDate"
-                            name="endDate"
-                            value={dateRange.endDate}
-                            onChange={handleDateChange}
-                            className="border border-gray-200   rounded-md text-sm px-3 py-2"
-                          />
-                        </div>
-                      </div>
-                      
-                      {/* Apply & Cancel Buttons */}
-                      <div className="flex justify-between pt-2">
-                        <button 
-                          onClick={() => setIsDatePickerOpen(false)}
-                          className="text-sm px-3 py-1.5 text-gray-600  hover:bg-gray-100  rounded-md transition-colors"
-                        >
-                          Cancel
-                        </button>
-                        <button 
-                          onClick={() => setIsDatePickerOpen(false)}
-                          className="text-sm px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors"
-                        >
-                          Apply
-                        </button>
+                      <div>
+                        <label className="text-xs text-gray-500 mb-1 block">End Date</label>
+                        <input
+                          type="date"
+                          name="endDate"
+                          value={dateRange.endDate}
+                          onChange={handleDateChange}
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded"
+                        />
                       </div>
                     </div>
                   </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Preset Ranges</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { label: 'Today', value: 'today' },
+                        { label: 'Yesterday', value: 'yesterday' },
+                        { label: 'Last 7 Days', value: 'last7days' },
+                        { label: 'Last 30 Days', value: 'last30days' },
+                        { label: 'This Month', value: 'thisMonth' },
+                        { label: 'Last Month', value: 'lastMonth' },
+                        { label: 'This Year', value: 'thisYear' },
+                      ].map((preset) => (
+                        <button
+                          key={preset.value}
+                          onClick={() => {
+                            applyPreset(preset.value);
+                            setIsDatePickerOpen(false);
+                          }}
+                          className={`text-left px-3 py-2 text-sm rounded ${
+                            selectedPreset === preset.value
+                              ? 'bg-blue-50 text-blue-600'
+                              : 'hover:bg-gray-50'
+                          }`}
+                        >
+                          {preset.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => setIsDatePickerOpen(false)}
+                      className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                      Apply
+                    </button>
+                  </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Export Button */}
+          <button className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">
+            <Download className="h-4 w-4 text-gray-500" />
+            <span className="text-sm">Export</span>
+          </button>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="w-full h-64 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-2">
+            <div className="h-12 w-12 rounded-full border-4 border-t-blue-600 border-blue-100 animate-spin"></div>
+            <p className="text-gray-500 mt-2">Loading dashboard data...</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Stats Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {statCards.map((card, index) => (
+              <Link key={index} href={card.href} className="group">
+                <div className="h-full bg-white border border-gray-100 rounded-xl p-6 shadow-sm hover:shadow-md transition-all">
+                  <div className="flex justify-between">
+                    <div className={`w-12 h-12 rounded-lg ${card.bgClass} ${card.iconClass} flex items-center justify-center`}>
+                      {card.icon}
+                    </div>
+                    <div>
+                      {renderTrendArrow(card.trend)}
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4">
+                    <p className="text-gray-500 text-sm">{card.title}</p>
+                    <h3 className="text-2xl font-bold mt-1">{card.value}</h3>
+                    <div className="flex items-center mt-1 text-sm text-gray-500">
+                      <span>{card.change} {card.changeLabel}</span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
           </div>
 
-          {isLoading ? (
-            <div className="grid place-items-center h-64">
-              <div className="h-12 w-12 rounded-full border-4 border-t-indigo-600 border-r-transparent border-b-transparent border-l-transparent animate-spin"></div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {statCards.map((card, index) => (
-                <Link 
-                  key={index} 
-                  href={card.href}
-                  className="group bg-white  rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200  overflow-hidden"
-                >
-                  <div className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className={`p-3 ${card.bgClass} rounded-lg ${card.iconClass}`}>
-                        {card.icon}
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        {renderTrendArrow(card.trend)}
-                        <span className={`text-sm font-medium ${
-                          card.trend > 0 ? 'text-emerald-500' : 
-                          card.trend < 0 ? 'text-rose-500' : 
-                          'text-gray-500 '
-                        }`}>
-                          {formatTrendPercentage(card.trend)}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <h3 className="text-base font-medium text-gray-500 ">{card.title}</h3>
-                    <p className="text-3xl font-bold mt-1 text-gray-900 ">
-                      {typeof card.value === 'number' ? card.value.toLocaleString() : card.value}
-                    </p>
-                    <p className="text-sm text-gray-500  mt-2">
-                      <span className="font-medium">{card.change}</span> {card.changeLabel}
-                    </p>
-                  </div>
-                  <div className="h-1 w-full bg-gradient-to-r from-transparent via-transparent to-transparent group-hover:from-indigo-400 group-hover:via-purple-500 group-hover:to-pink-500 transition-all duration-300"></div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Revenue Chart */}
-          <div className="bg-white  rounded-2xl shadow-sm border border-gray-100  overflow-hidden">
-            <div className="p-6">
+          {/* Charts Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Revenue Chart */}
+            <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900 ">Revenue</h2>
-                  <p className="text-sm text-gray-500 ">Total revenue over time</p>
+                  <h2 className="text-lg font-bold">Revenue Trend</h2>
+                  <p className="text-gray-500 text-sm mt-1">Revenue over time</p>
                 </div>
-                <Link href="/admin/finance" className="text-indigo-600  text-sm font-medium hover:underline flex items-center gap-1">
-                  Details
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                    <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
-                  </svg>
-                </Link>
+                <div className="text-sm font-medium text-emerald-600 bg-emerald-50 py-1 px-2.5 rounded-full">
+                  {formatTrendPercentage(stats?.revenue?.change)}
+                </div>
               </div>
-
-              {revenueLoading ? (
-                <div className="h-64 grid place-items-center">
-                  <div className="h-8 w-8 rounded-full border-4 border-t-indigo-600 border-r-transparent border-b-transparent border-l-transparent animate-spin"></div>
-                </div>
-              ) : revenueData?.data && (
-                <div className="h-72">
+              
+              <div className="h-64">
+                {stats?.revenue?.trend?.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={revenueData.data} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+                    <AreaChart
+                      data={stats.revenue.trend}
+                      margin={{ top: 5, right: 5, left: 0, bottom: 5 }}
+                    >
                       <defs>
-                        <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={revenueChartColors.fill} stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor={revenueChartColors.fill} stopOpacity={0}/>
+                        <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={revenueChartColors.fill} stopOpacity={0.8} />
+                          <stop offset="95%" stopColor={revenueChartColors.fill} stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                      <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f1f1f1" />
                       <XAxis 
-                        dataKey="period" 
-                        axisLine={false}
+                        dataKey="date" 
+                        tickFormatter={formatDate}
+                        stroke="#94a3b8"
                         tickLine={false}
-                        tickFormatter={(value) => {
-                          const date = new Date(value);
-                          return format(date, 'MMM d');
-                        }}
-                        tick={{ fontSize: 12, fill: '#6b7280' }}
+                        axisLine={false}
                       />
                       <YAxis 
-                        axisLine={false}
+                        tickFormatter={(value) => `₹${value}`}
+                        stroke="#94a3b8"
                         tickLine={false}
-                        tick={{ fontSize: 12, fill: '#6b7280' }}
-                        tickFormatter={(value) => {
-                          return new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: 'USD',
-                            notation: 'compact',
-                            compactDisplay: 'short'
-                          }).format(value);
-                        }}
+                        axisLine={false}
                       />
-                      <Tooltip
-                        contentStyle={{ 
-                          backgroundColor: 'white', 
-                          borderRadius: '0.5rem',
-                          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-                          border: '1px solid #e5e7eb'
-                        }}
-                        formatter={(value) => [formatCurrency(value), "Revenue"]}
-                        labelFormatter={(value) => format(new Date(value), 'MMM d, yyyy')}
-                      />
+                      <Tooltip formatter={(value) => [`₹${value}`, 'Revenue']} labelFormatter={formatDate} />
                       <Area 
                         type="monotone" 
-                        dataKey="revenue" 
+                        dataKey="amount" 
                         stroke={revenueChartColors.stroke} 
-                        strokeWidth={2}
-                        fillOpacity={1}
-                        fill="url(#colorRevenue)"
+                        fillOpacity={1} 
+                        fill="url(#revenueGradient)" 
                       />
                     </AreaChart>
                   </ResponsiveContainer>
-                </div>
-              )}
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-gray-400">
+                    <BarChartIcon size={32} className="mb-2" />
+                    <p>No revenue data available for selected period</p>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-
-          {/* Ticket Sales Chart */}
-          <div className="bg-white  rounded-2xl shadow-sm border border-gray-100  overflow-hidden">
-            <div className="p-6">
+            
+            {/* Ticket Sales Chart */}
+            <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900 ">Ticket Sales</h2>
-                  <p className="text-sm text-gray-500 ">Daily ticket sales volume</p>
+                  <h2 className="text-lg font-bold">Ticket Sales</h2>
+                  <p className="text-gray-500 text-sm mt-1">Tickets sold over time</p>
                 </div>
-                <Link href="/admin/tickets" className="text-indigo-600  text-sm font-medium hover:underline flex items-center gap-1">
-                  Details
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-  <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
-</svg>
-                </Link>
+                <div className="text-sm font-medium text-purple-600 bg-purple-50 py-1 px-2.5 rounded-full">
+                  {formatTrendPercentage(stats?.tickets?.change)}
+                </div>
               </div>
-
-              {revenueLoading ? (
-                <div className="h-64 grid place-items-center">
-                  <div className="h-8 w-8 rounded-full border-4 border-t-indigo-600 border-r-transparent border-b-transparent border-l-transparent animate-spin"></div>
-                </div>
-              ) : revenueData?.data && (
-                <div className="h-72">
+              
+              <div className="h-64">
+                {stats?.ticketSales?.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={revenueData.data} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+                    <BarChart
+                      data={stats.ticketSales}
+                      margin={{ top: 5, right: 5, left: 0, bottom: 5 }}
+                    >
                       <defs>
                         <linearGradient id="ticketSalesGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={ticketSalesColors.bar} stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor={ticketSalesColors.bar} stopOpacity={0.2}/>
+                          <stop offset="5%" stopColor={ticketSalesColors.bar} stopOpacity={0.8} />
+                          <stop offset="95%" stopColor={ticketSalesColors.bar} stopOpacity={0.3} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                      <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f1f1f1" />
                       <XAxis 
-                        dataKey="period" 
-                        axisLine={false}
+                        dataKey="date" 
+                        tickFormatter={formatDate}
+                        stroke="#94a3b8"
                         tickLine={false}
-                        tickFormatter={(value) => {
-                          const date = new Date(value);
-                          return format(date, 'MMM d');
-                        }}
-                        tick={{ fontSize: 12, fill: '#6b7280' }}
+                        axisLine={false}
                       />
                       <YAxis 
-                        axisLine={false}
+                        stroke="#94a3b8"
                         tickLine={false}
-                        tick={{ fontSize: 12, fill: '#6b7280' }}
+                        axisLine={false}
                       />
-                      <Tooltip
-                        contentStyle={{ 
-                          backgroundColor: 'white', 
-                          borderRadius: '0.5rem',
-                          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-                          border: '1px solid #e5e7eb'
-                        }}
-                        formatter={(value) => [value, "Tickets Sold"]}
-                        labelFormatter={(value) => format(new Date(value), 'MMM d, yyyy')}
-                      />
+                      <Tooltip formatter={(value) => [value, 'Tickets']} labelFormatter={formatDate} />
                       <Bar 
-                        dataKey="tickets" 
+                        dataKey="count" 
                         fill="url(#ticketSalesGradient)" 
                         radius={[4, 4, 0, 0]}
                       />
                     </BarChart>
                   </ResponsiveContainer>
-                </div>
-              )}
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-gray-400">
+                    <BarChartIcon size={32} className="mb-2" />
+                    <p>No ticket sales data available for selected period</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Top Events */}
-          <div className="lg:col-span-2 bg-white  rounded-2xl shadow-sm border border-gray-100  overflow-hidden">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900 ">Top Events</h2>
-                  <p className="text-sm text-gray-500 ">Best performing events by revenue</p>
-                </div>
-                <Link href="/admin/events" className="text-indigo-600  text-sm font-medium hover:underline flex items-center gap-1">
-                  View all
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                    <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
-                  </svg>
-                </Link>
-              </div>
-
-              {eventsLoading ? (
-                <div className="h-64 grid place-items-center">
-                  <div className="h-8 w-8 rounded-full border-4 border-t-indigo-600 border-r-transparent border-b-transparent border-l-transparent animate-spin"></div>
-                </div>
-              ) : eventPerformance?.data && (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="text-left text-sm text-gray-500  border-b border-gray-200 ">
-                        <th className="pb-3 font-medium">Event</th>
-                        <th className="pb-3 font-medium">Date</th>
-                        <th className="pb-3 font-medium">Tickets Sold</th>
-                        <th className="pb-3 font-medium">Revenue</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {eventPerformance.data.map((event, index) => (
-                        <tr key={index} className="border-b last:border-b-0 border-gray-100 ">
-                          <td className="py-4 pr-4">
-                            <div className="flex items-center">
-                              <div className="h-10 w-10 flex-shrink-0 rounded bg-gray-100  grid place-items-center mr-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-gray-500 ">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                                </svg>
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium text-gray-900 ">{event.name}</p>
-                                <p className="text-xs text-gray-500 ">{event.location}</p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-4 px-4 text-sm text-gray-500 ">
-                            {formatDate(event.date)}
-                          </td>
-                          <td className="py-4 px-4">
-                            <div className="flex items-center">
-                              <div className="font-medium text-sm text-gray-900 ">
-                                {event.ticketsSold}/{event.capacity}
-                              </div>
-                              <div className="ml-2 w-16 bg-gray-200  rounded-full h-1.5">
-                                <div className="bg-purple-600 h-1.5 rounded-full" style={{width: `${(event.ticketsSold / event.capacity * 100)}%`}}></div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-4 pl-4 text-sm font-medium text-gray-900 ">
-                            {formatCurrency(event.revenue)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* User Distribution */}
-          <div className="bg-white  rounded-2xl shadow-sm border border-gray-100  overflow-hidden">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900 ">User Registrations</h2>
-                  <p className="text-sm text-gray-500 ">New users over time</p>
-                </div>
-              </div>
-
-              {usersLoading ? (
-                <div className="h-64 grid place-items-center">
-                  <div className="h-8 w-8 rounded-full border-4 border-t-indigo-600 border-r-transparent border-b-transparent border-l-transparent animate-spin"></div>
-                </div>
-              ) : userStats?.data && (
-                <div className="h-72">
+          
+          {/* Bottom Section: Event Performance & Attendance Stats */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Event Distribution */}
+            <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
+              <h2 className="text-lg font-bold mb-6">Event Performance</h2>
+              
+              <div className="h-80">
+                {stats?.eventPerformance?.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={userStats.data} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={userRegistrationColors.bar} stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor={userRegistrationColors.bar} stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                      <XAxis 
-                        dataKey="date" 
-                        axisLine={false}
-                        tickLine={false}
-                        tickFormatter={(value) => {
-                          const date = new Date(value);
-                          return format(date, 'MMM d');
-                        }}
-                        tick={{ fontSize: 12, fill: '#6b7280' }}
-                      />
+                    <BarChart
+                      layout="vertical"
+                      data={stats.eventPerformance}
+                      margin={{ top: 5, right: 5, left: 0, bottom: 5 }}
+                    >
+                      <CartesianGrid horizontal={true} vertical={false} strokeDasharray="3 3" stroke="#f1f1f1" />
+                      <XAxis type="number" stroke="#94a3b8" tickLine={false} axisLine={false} />
                       <YAxis 
-                        axisLine={false}
+                        dataKey="title" 
+                        type="category" 
+                        width={150}
+                        stroke="#94a3b8" 
                         tickLine={false}
-                        tick={{ fontSize: 12, fill: '#6b7280' }}
-                      />
-                      <Tooltip
-                        contentStyle={{ 
-                          backgroundColor: 'white', 
-                          borderRadius: '0.5rem',
-                          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-                          border: '1px solid #e5e7eb'
+                        axisLine={false}
+                        tick={props => {
+                          const { x, y, payload } = props;
+                          const title = payload.value;
+                          // Truncate long titles
+                          const displayTitle = title.length > 20 ? title.substring(0, 18) + '...' : title;
+                          return (
+                            <text x={x} y={y} dy={4} textAnchor="end" fontSize={11} fill="#64748b">
+                              {displayTitle}
+                            </text>
+                          );
                         }}
-                        formatter={(value) => [value, "New Users"]}
-                        labelFormatter={(value) => format(new Date(value), 'MMM d, yyyy')}
                       />
-                      <Area 
-                        type="monotone" 
-                        dataKey="count" 
-                        stroke={userRegistrationColors.bar} 
-                        strokeWidth={2}
-                        fillOpacity={1}
-                        fill="url(#colorUsers)"
+                      <Tooltip 
+                        formatter={(value, name) => [value, name === 'ticketsSold' ? 'Tickets Sold' : 'Percentage Sold']}
                       />
-                    </AreaChart>
+                      <Legend />
+                      <Bar 
+                        name="Tickets Sold" 
+                        dataKey="ticketsSold" 
+                        fill="#8b5cf6" 
+                        radius={[0, 4, 4, 0]}
+                      />
+                      <Bar 
+                        name="Percentage Sold" 
+                        dataKey="percentageSold" 
+                        fill="#6366f1" 
+                        radius={[0, 4, 4, 0]}
+                      />
+                    </BarChart>
                   </ResponsiveContainer>
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-gray-400">
+                    <BarChartIcon size={32} className="mb-2" />
+                    <p>No event performance data available</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Attendance Stats */}
+            <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
+              <h2 className="text-lg font-bold mb-6">Attendance Statistics</h2>
+              
+              {stats?.attendanceStats?.length > 0 ? (
+                <div className="space-y-4">
+                  {stats.attendanceStats.map((event, index) => (
+                    <div key={index} className="border border-gray-100 rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-medium">{event.eventTitle}</h3>
+                        <span className="text-sm text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                          {event.attendanceRate}%
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
+                        <span>Registered: {event.registeredCount}</span>
+                        <span>Attended: {event.attendedCount}</span>
+                      </div>
+                      
+                      <div className="w-full bg-gray-100 rounded-full h-2.5">
+                        <div 
+                          className="bg-blue-600 h-2.5 rounded-full" 
+                          style={{ width: `${event.attendanceRate}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <div className="flex justify-center">
+                    <Link 
+                      href="/admin/reports" 
+                      className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                    >
+                      View detailed attendance reports →
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div className="h-80 flex flex-col items-center justify-center text-gray-400">
+                  <Activity size={32} className="mb-2" />
+                  <p>No attendance data available</p>
                 </div>
               )}
             </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }

@@ -165,7 +165,7 @@ export default function UserDetailsPage() {
                   </div>
                   <div className="mt-2 text-sm text-muted-foreground">
                     <p>Date: {format(new Date(ticket.event.date), 'PPP')}</p>
-                    <p>Price: ${ticket.price}</p>
+                    <p>Price: ₹{ticket.price}</p>
                   </div>
                 </div>
               ))}
