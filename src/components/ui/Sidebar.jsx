@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,8 +10,24 @@ export default function Sidebar({ role = 'admin' }) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  // Define navigation items based on role
+  // Handle responsive collapse
+  useEffect(() => {
+    setMounted(true);
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setCollapsed(true);
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    handleResize();
+    
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Navigation items based on role
   const adminNavItems = [
     {
       name: 'Dashboard',
@@ -27,7 +43,7 @@ export default function Sidebar({ role = 'admin' }) {
       href: '/admin/events',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
         </svg>
       ),
     },
@@ -64,7 +80,6 @@ export default function Sidebar({ role = 'admin' }) {
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z" />
         </svg>
       ),
     },
@@ -95,7 +110,6 @@ export default function Sidebar({ role = 'admin' }) {
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z" />
         </svg>
       ),
     },
@@ -103,71 +117,114 @@ export default function Sidebar({ role = 'admin' }) {
 
   const navItems = role === 'admin' ? adminNavItems : staffNavItems;
 
+  // Fixed isActive function to accurately check the current path
   const isActive = (path) => {
+    if (path === '/admin' || path === '/staff') {
+      // For dashboard, only match exact path to prevent it from being always active
+      return pathname === path;
+    }
     return pathname === path || pathname.startsWith(`${path}/`);
   };
 
+  if (!mounted) return null;
+
   return (
     <aside 
-      className={`bg-background border-r border-border h-screen sticky top-0 transition-all duration-300 ${
+      className={`bg-white shadow-md shadow-gray-300 h-screen sticky top-0 transition-all duration-300 ease-in-out z-10 ${
         collapsed ? 'w-16' : 'w-64'
       }`}
     >
       <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-border">
-          {!collapsed && (
+        <div className="h-16 flex items-center justify-between px-4">
+          {!collapsed ? (
             <Link href={role === 'admin' ? '/admin' : '/staff'} className="flex items-center space-x-2">
-              <span className="text-xl font-bold text-primary">ScienceExpo</span>
+              <div className="w-8 h-8 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-blue-600">
+                  <path d="M11.7 2.805a.75.75 0 01.6 0A60.65 60.65 0 0122.83 8.72a.75.75 0 01-.231 1.337 49.949 49.949 0 00-9.902 3.912l-.003.002-.34.18a.75.75 0 01-.707 0A50.009 50.009 0 007.5 12.174v-.224c0-.131.067-.248.172-.311a54.614 54.614 0 014.653-2.52.75.75 0 00-.65-1.352 56.129 56.129 0 00-4.78 2.589 1.858 1.858 0 00-.859 1.228 49.803 49.803 0 00-4.634-1.527.75.75 0 01-.231-1.337A60.653 60.653 0 0111.7 2.805z" />
+                  <path d="M13.06 15.473a48.45 48.45 0 017.666-3.282c.134 1.414.22 2.843.255 4.285a.75.75 0 01-.46.71 47.878 47.878 0 00-8.105 4.342.75.75 0 01-.832 0 47.877 47.877 0 00-8.104-4.342.75.75 0 01-.461-.71c.035-1.442.121-2.87.255-4.286A48.4 48.4 0 016 13.18v1.27a1.5 1.5 0 00-.14 2.508c-.09.38-.222.753-.397 1.11.452.213.901.434 1.346.661a6.729 6.729 0 00.551-1.608 1.5 1.5 0 00.14-2.67v-.645a48.549 48.549 0 013.44 1.668 2.25 2.25 0 002.12 0z" />
+                  <path d="M4.462 19.462c.42-.419.753-.89 1-1.394.453.213.902.434 1.347.661a6.743 6.743 0 01-1.286 1.794.75.75 0 11-1.06-1.06z" />
+                </svg>
+              </div>
+              <span className="text-base font-medium text-gray-900">ScienceCity</span>
             </Link>
+          ) : (
+            <div className="w-full flex justify-center">
+              <button 
+                onClick={() => setCollapsed(false)} 
+                className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-full"
+                aria-label="Expand sidebar"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-blue-600">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+              </button>
+            </div>
           )}
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="p-1.5 rounded-md bg-secondary/50 hover:bg-secondary"
-            aria-label="Toggle sidebar"
-          >
-            {collapsed ? (
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-              </svg>
-            ) : (
+          {!collapsed && (
+            <button
+              onClick={() => setCollapsed(true)}
+              className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full"
+              aria-label="Collapse sidebar"
+            >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
               </svg>
-            )}
-          </button>
+            </button>
+          )}
         </div>
 
+        {/* Divider */}
+        <div className="h-px bg-gray-200 mx-3" />
+
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3">
-          <ul className="space-y-2">
-            {navItems.map((item) => (
-              <li key={item.name}>
-                <Link
-                  href={item.href}
-                  className={`flex items-center p-2 rounded-md transition-colors ${
-                    isActive(item.href)
-                      ? 'bg-primary/10 text-primary'
-                      : 'hover:bg-secondary/50 text-foreground/70 hover:text-foreground'
-                  }`}
-                >
-                  <span className="flex-shrink-0">{item.icon}</span>
-                  {!collapsed && <span className="ml-3">{item.name}</span>}
-                </Link>
-              </li>
-            ))}
+        <nav className="flex-1 py-6 px-3">
+          <ul className="space-y-1">
+            {navItems.map((item) => {
+              const active = isActive(item.href);
+              return (
+                <li key={item.name}>
+                  <Link
+                    href={item.href}
+                    className={`flex items-center px-3 py-2 rounded-md transition-colors ${
+                      active
+                        ? 'bg-blue-50 text-blue-700 font-medium'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <span className={`flex-shrink-0 ${active ? 'text-blue-600' : ''}`}>{item.icon}</span>
+                    {!collapsed && <span className="ml-3">{item.name}</span>}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
+        {/* Divider before footer */}
+        <div className="h-px bg-gray-200 mx-3" />
+
         {/* Footer */}
-        <div className="border-t border-border p-4">
+        <div className="p-4">
+          {user && !collapsed && (
+            <div className="mb-4 flex items-center">
+              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 font-medium">
+                {user.name?.charAt(0) || 'U'}
+              </div>
+              <div className="ml-3 overflow-hidden">
+                <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
+                <p className="text-xs text-gray-500 truncate">{user.email}</p>
+              </div>
+            </div>
+          )}
+          
           <div className={`flex ${collapsed ? 'justify-center' : 'justify-between'} items-center`}>
             <ThemeToggle />
             
             {!collapsed && user && (
               <button
                 onClick={logout}
-                className="text-sm text-foreground/70 hover:text-foreground flex items-center space-x-1"
+                className="text-xs font-medium text-gray-600 hover:text-gray-900 flex items-center space-x-1"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
@@ -176,20 +233,8 @@ export default function Sidebar({ role = 'admin' }) {
               </button>
             )}
           </div>
-          
-          {!collapsed && user && (
-            <div className="mt-3 flex items-center">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-medium">
-                {user.name?.charAt(0) || 'U'}
-              </div>
-              <div className="ml-3 overflow-hidden">
-                <p className="text-sm font-medium truncate">{user.name}</p>
-                <p className="text-xs text-foreground/60 truncate">{user.email}</p>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </aside>
   );
-} 
+}
