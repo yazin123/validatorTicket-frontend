@@ -14,8 +14,8 @@ export default function CustomerHeader() {
 
   const navItems = [
     { name: 'Home', href: '/' },
-    { name: 'Events', href: '/events' },
-    { name: 'My Tickets', href: '/my-tickets' },
+    { name: 'Events', href: '/customer/events' },
+    { name: 'My Tickets', href: '/customer/my-tickets' },
   ];
 
   const isActive = (path) => {

@@ -1,13 +1,20 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useParams } from "next/navigation";
 import api from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { toast } from "react-hot-toast";
+import EntryPassManager from '@/components/dashboard/EntryPassManager';
 
-export default function MultiEventBookPage() {
-  const [events, setEvents] = useState([]);
-  const [selectedEvents, setSelectedEvents] = useState([]);
+export default function BookEventShowPage() {
+  const params = useParams();
+  const searchParams = useSearchParams();
+  
+  const eventId = params.eventId;
+  const showId = searchParams.get('showId');
+  
+  const [event, setEvent] = useState(null);
+  const [show, setShow] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -15,63 +22,59 @@ export default function MultiEventBookPage() {
   const [totalPrice, setTotalPrice] = useState(0);
   const [showPayment, setShowPayment] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
-  const searchParams = useSearchParams();
+  const [entryPass, setEntryPass] = useState(null);
 
   useEffect(() => {
-    async function fetchEvents() {
+    async function fetchEntryPass() {
       try {
-        const res = await api.get("/events?status=published");
-        const eventData = res.data.events || res.data.data || res.data;
-        setEvents(eventData);
-        
-        // Check for pre-selected event from URL
-        const preSelectedEvent = searchParams.get('eventId');
-        if (preSelectedEvent) {
-          setSelectedEvents([preSelectedEvent]);
-        }
-      } catch (err) {
-        setError("Failed to load events");
+        const res = await api.get('/entrypass/me');
+        setEntryPass(res.data.entryPass);
+      } catch {
+        setEntryPass(null);
       }
     }
-    fetchEvents();
-  }, [searchParams]);
+    fetchEntryPass();
+  }, []);
 
-  // Calculate total price whenever events or quantity changes
   useEffect(() => {
-    if (events.length > 0 && selectedEvents.length > 0) {
-      const selectedEventObjects = events.filter(event => 
-        selectedEvents.includes(event._id)
-      );
-      
-      const price = selectedEventObjects.reduce(
-        (sum, event) => sum + (event.price * quantity), 
-        0
-      );
-      
+    async function fetchEventAndShow() {
+      if (!eventId || !showId) return;
+      try {
+        const res = await api.get(`/events/${eventId}`);
+        const eventData = res.data.event || res.data.data || res.data;
+        setEvent(eventData);
+        
+        if (eventData?.shows?.length) {
+          const foundShow = eventData.shows.find(s => s.showId === showId);
+          setShow(foundShow);
+        }
+      } catch (err) {
+        setError("Failed to load event or show");
+      }
+    }
+    fetchEventAndShow();
+  }, [eventId, showId]);
+
+  // Calculate total price whenever event or quantity changes
+  useEffect(() => {
+    if (event) {
+      const price = event.price * quantity;
       setTotalPrice(price);
     } else {
       setTotalPrice(0);
     }
-  }, [events, selectedEvents, quantity]);
-
-  const handleEventSelect = (eventId) => {
-    setSelectedEvents(prev => prev.includes(eventId)
-      ? prev.filter(id => id !== eventId)
-      : [...prev, eventId]);
-  };
+  }, [event, quantity]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (selectedEvents.length === 0) {
-      setError("Please select at least one event.");
-      return;
-    }
     if (quantity < 1) {
       setError("Please enter a valid quantity.");
       return;
     }
-    
-    // Show payment confirmation step
+    if (quantity > maxBookable) {
+      setError("Cannot book more than available seats or your entry pass head count.");
+      return;
+    }
     setShowPayment(true);
   };
   
@@ -79,18 +82,15 @@ export default function MultiEventBookPage() {
     setLoading(true);
     setError("");
     try {
-      // Simulate payment process
       await new Promise(resolve => setTimeout(resolve, 1500));
       setPaymentSuccess(true);
-      
-      // Proceed with ticket booking
       const res = await api.post(`/tickets/book`, {
-        events: selectedEvents,
-        quantity
+        eventId,
+        showId,
+        headCount: quantity
       });
-      
       toast.success("Ticket(s) booked successfully!");
-      setQrCode(res.data.qrCode || res.data.data?.qrCode);
+      setQrCode(res.data.ticket?.qrCode || res.data.qrCode);
     } catch (err) {
       setPaymentSuccess(false);
       setShowPayment(false);
@@ -99,6 +99,15 @@ export default function MultiEventBookPage() {
       setLoading(false);
     }
   };
+
+  // Prevent booking if not enough head count
+  const canBook = entryPass && entryPass.headCount >= quantity;
+
+  // Calculate available seats
+  const availableSeats = event && show ? (event.capacity - (show.seatsBooked || 0)) : 0;
+
+  // Only allow booking up to available seats and entry pass head count
+  const maxBookable = Math.min(entryPass ? entryPass.headCount : 0, availableSeats);
 
   if (qrCode) {
     return (
@@ -119,8 +128,12 @@ export default function MultiEventBookPage() {
         <h1 className="text-2xl font-bold mb-4">Complete Payment</h1>
         <div className="border-t border-b py-4 my-4">
           <div className="flex justify-between mb-2">
-            <span>Selected Events:</span>
-            <span>{selectedEvents.length}</span>
+            <span>Event:</span>
+            <span>{event?.title}</span>
+          </div>
+          <div className="flex justify-between mb-2">
+            <span>Show Date:</span>
+            <span>{show ? new Date(show.date).toLocaleDateString() : ''}</span>
           </div>
           <div className="flex justify-between mb-2">
             <span>Quantity:</span>
@@ -163,65 +176,48 @@ export default function MultiEventBookPage() {
     );
   }
 
+  // Only allow booking if event and show are loaded
+  if (!event || !show) return <div className="p-8 text-center">Loading event/show...</div>;
+
   return (
     <div className="max-w-xl mx-auto p-8 bg-white rounded-xl shadow-lg border border-gray-200">
-      <h1 className="text-2xl font-bold mb-4">Book Tickets for Events</h1>
+      <EntryPassManager onSuccess={setEntryPass} />
+      <h1 className="text-2xl font-bold mb-4">Book Ticket for {event.title}</h1>
+      <div className="mb-4">
+        <div className="font-semibold">Show:</div>
+        <div>{new Date(show.date).toLocaleDateString()} | {show.startTime} - {show.endTime}</div>
+        <div className="text-xs text-gray-500">Available seats: {availableSeats}</div>
+      </div>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block font-semibold mb-2">Select Events</label>
-          <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto border rounded p-2 bg-gray-50">
-            {events.map(event => {
-              // Calculate remaining seats
-              const remainingSeats = event.capacity - (event.ticketsSold || 0);
-              
-              return (
-                <label key={event._id} className="flex items-center gap-2 cursor-pointer p-2 hover:bg-gray-100 rounded">
-                  <input
-                    type="checkbox"
-                    checked={selectedEvents.includes(event._id)}
-                    onChange={() => handleEventSelect(event._id)}
-                    className="accent-blue-600"
-                    disabled={remainingSeats < quantity}
-                  />
-                  <div className="flex-1">
-                    <div>{event.title} - ₹{event.price}</div>
-                    <div className="text-xs text-gray-500">
-                      {new Date(event.startDate).toLocaleDateString()} | Available: {remainingSeats} seat(s)
-                    </div>
-                  </div>
-                </label>
-              );
-            })}
-          </div>
-        </div>
         <div>
           <label className="block font-semibold mb-1">Number of Tickets</label>
           <input
             type="number"
             min={1}
-            max={200}
+            max={maxBookable}
             value={quantity}
             onChange={e => setQuantity(Number(e.target.value))}
             className="input w-full"
             required
+            disabled={!entryPass}
           />
+          {entryPass && <div className="text-xs text-gray-500 mt-1">Available head count: {entryPass.headCount}</div>}
         </div>
-        
         <div className="border-t pt-4">
           <div className="flex justify-between font-bold text-lg">
             <span>Total:</span>
-            <span>₹{totalPrice.toFixed(2)}</span>
+            <span>₹{(event.price * quantity).toLocaleString()}</span>
           </div>
         </div>
-        
         {error && <div className="text-red-600 text-center font-semibold py-2 bg-red-50 rounded">{error}</div>}
         <Button 
           type="submit" 
-          disabled={loading || selectedEvents.length === 0} 
+          disabled={loading || !canBook || quantity > maxBookable} 
           className="w-full"
         >
           Proceed to Payment
         </Button>
+        {!canBook && <div className="text-red-600 text-center font-semibold py-2 bg-red-50 rounded">You do not have enough entry pass head count. Please purchase or increment your entry pass above.</div>}
       </form>
     </div>
   );

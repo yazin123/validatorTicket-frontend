@@ -30,6 +30,35 @@ export function TicketVerification({ ticket, status, message, onMarkAsUsed }) {
     if (typeof value === 'object') return JSON.stringify(value);
     return value;
   };
+
+  // Helper function to check if a string is a valid data URL
+  const isValidDataURL = (str) => {
+    return typeof str === 'string' && str.startsWith('data:');
+  };
+  
+  // Process QR code for display - handles various formats
+  const processQrCodeForDisplay = (qrCodeData) => {
+    if (!qrCodeData) return null;
+    
+    // If it's already a valid data URL for an image, use it directly
+    if (isValidDataURL(qrCodeData)) {
+      return qrCodeData;
+    }
+    
+    // For other formats (JSON string, plain text), create a QR code on the fly
+    try {
+      // For non-string data, stringify it
+      const qrValue = typeof qrCodeData === 'object' 
+        ? JSON.stringify(qrCodeData) 
+        : String(qrCodeData);
+        
+      // Return component that generates QR code
+      return <QRCodeSVG value={qrValue} size={160} />;
+    } catch (error) {
+      console.error("Error processing QR data for display:", error);
+      return null;
+    }
+  };
   
   if (!ticket && !message) {
     return (
@@ -177,7 +206,20 @@ export function TicketVerification({ ticket, status, message, onMarkAsUsed }) {
             
             <div className="flex justify-center mb-4">
               {ticket.qrCode ? (
-                <QRCodeSVG value={ticket.qrCode.toString()} size={160} />
+                <>
+                  {isValidDataURL(ticket.qrCode) ? (
+                    <img 
+                      src={ticket.qrCode} 
+                      alt="Ticket QR Code" 
+                      className="w-40 h-40 object-contain border border-gray-200 rounded-md"
+                    />
+                  ) : (
+                    <QRCodeSVG 
+                      value={typeof ticket.qrCode === 'object' ? JSON.stringify(ticket.qrCode) : String(ticket.qrCode)} 
+                      size={160} 
+                    />
+                  )}
+                </>
               ) : (
                 <div className="bg-gray-100 h-40 w-40 flex items-center justify-center rounded-md">
                   <TicketIcon className="h-16 w-16 text-gray-400" />

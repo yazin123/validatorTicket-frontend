@@ -30,6 +30,7 @@ import {
   Sliders,
   Menu
 } from 'lucide-react';
+import Image from 'next/image';
 
 export default function EventsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -384,11 +385,12 @@ export default function EventsPage() {
               return (
                 <div key={event._id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col group hover:shadow-md transition-shadow">
                   {/* Event Image or Placeholder */}
-                  <div className="relative bg-gradient-to-br from-indigo-400 to-indigo-600 h-40 flex items-center justify-center overflow-hidden">
-                    {event.image && event.image !== 'default-event.jpg' ? (
+                  <div className="relative  h-40 flex items-center justify-center overflow-hidden">
+                    {event.image ? (
                       <img 
-                        src={event.image} 
+                        src={`/${event.image}`} 
                         alt={event.title} 
+                       
                         className="w-full h-full object-cover transition-transform group-hover:scale-105"
                       />
                     ) : (
