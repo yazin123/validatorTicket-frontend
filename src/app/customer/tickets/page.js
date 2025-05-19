@@ -2,8 +2,9 @@
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { 
-  Ticket, Clock, MapPin, Calendar, Tag, AlertCircle, 
-  CheckCircle, XCircle, Download, Share2, ChevronDown, ChevronUp 
+  Ticket, Clock, MapPin, Calendar, Tag, AlertCircle, User,
+  CheckCircle, XCircle, Download, Share2, ChevronDown, ChevronUp,
+  Calendar as CalendarIcon, Clock as ClockIcon, CreditCard, Users
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
@@ -19,8 +20,11 @@ export default function CustomerTicketsPage() {
     async function fetchTickets() {
       try {
         const res = await api.get("/tickets/me");
-        setTickets(res.data.tickets || res.data.data);
+        // Handle both API response formats (tickets or data property)
+        const ticketData = res.data.tickets || res.data.data;
+        setTickets(ticketData);
       } catch (err) {
+        console.error("Error fetching tickets:", err);
         setError("Failed to load tickets");
       } finally {
         setLoading(false);
@@ -68,6 +72,7 @@ export default function CustomerTicketsPage() {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'active':
+      case 'valid':
         return <span className="bg-green-100 text-green-800 px-2.5 py-0.5 rounded-full text-xs font-medium flex items-center"><CheckCircle className="w-3 h-3 mr-1" />Active</span>;
       case 'used':
         return <span className="bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full text-xs font-medium flex items-center"><Clock className="w-3 h-3 mr-1" />Used</span>;
@@ -87,37 +92,73 @@ export default function CustomerTicketsPage() {
       weekday: 'short', 
       year: 'numeric', 
       month: 'short', 
-      day: 'numeric',
+      day: 'numeric'
+    });
+  };
+
+  const formatTime = (dateString, timeString) => {
+    if (!dateString) return '-';
+    
+    if (timeString) {
+      return timeString;
+    }
+    
+    // Extract time from date object if no specific time string provided
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { 
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      hour12: true
     });
   };
 
   const formatShowTime = (date, startTime) => {
-    if (!date || !startTime) return '';
-    return `${new Date(date).toLocaleDateString()} at ${startTime}`;
+    if (!date) return '-';
+    
+    const formattedDate = formatDate(date);
+    const formattedTime = startTime || formatTime(date);
+    
+    return `${formattedDate} at ${formattedTime}`;
   };
 
   const filteredTickets = activeFilter === "all" 
     ? tickets 
     : tickets.filter(ticket => ticket.status === activeFilter);
 
+  // Calculate counts for each status to show in filter tabs
+  const statusCounts = tickets.reduce((counts, ticket) => {
+    const status = ticket.status || 'unknown';
+    counts[status] = (counts[status] || 0) + 1;
+    return counts;
+  }, {});
+  
+  const activeCount = (statusCounts.active || 0) + (statusCounts.valid || 0);
+  const usedCount = statusCounts.used || 0;
+  const allCount = tickets.length;
+
   if (loading) return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="h-8 w-32 bg-gray-200 rounded animate-pulse mb-6 mx-auto"></div>
+        <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-6 mx-auto"></div>
         <div className="flex justify-center space-x-4 mb-8">
-          <div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
-          <div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
-          <div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-10 w-24 bg-gray-200 rounded-md animate-pulse"></div>
+          <div className="h-10 w-24 bg-gray-200 rounded-md animate-pulse"></div>
+          <div className="h-10 w-24 bg-gray-200 rounded-md animate-pulse"></div>
         </div>
         <div className="space-y-6">
-          {[1, 2].map(n => (
-            <div key={n} className="bg-white rounded-xl shadow p-6 border border-gray-100 animate-pulse">
-              <div className="h-6 w-48 bg-gray-200 rounded mb-4"></div>
-              <div className="h-4 w-64 bg-gray-200 rounded mb-3"></div>
-              <div className="h-4 w-32 bg-gray-200 rounded mb-3"></div>
-              <div className="h-4 w-40 bg-gray-200 rounded mb-3"></div>
+          {[1, 2, 3].map(n => (
+            <div key={n} className="bg-white rounded-xl shadow-md p-6 border border-gray-100 animate-pulse">
+              <div className="flex justify-between">
+                <div className="space-y-3 w-3/4">
+                  <div className="h-6 w-3/4 bg-gray-200 rounded"></div>
+                  <div className="h-4 w-1/2 bg-gray-200 rounded"></div>
+                  <div className="h-4 w-2/3 bg-gray-200 rounded"></div>
+                </div>
+                <div className="w-1/4 flex flex-col items-end">
+                  <div className="h-6 w-20 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-4 w-16 bg-gray-200 rounded"></div>
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -126,55 +167,72 @@ export default function CustomerTicketsPage() {
   );
 
   if (error) return (
-    <div className="p-8 text-center text-red-600 bg-red-50 rounded-lg border border-red-200 max-w-4xl mx-auto">
-      <AlertCircle className="w-8 h-8 mx-auto mb-2" />
-      <h2 className="text-xl font-bold mb-2">Error Loading Tickets</h2>
-      <p>{error}</p>
+    <div className="p-8 text-center">
+      <div className="max-w-md mx-auto bg-red-50 p-6 rounded-lg border border-red-200">
+        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+        <h2 className="text-xl font-bold text-red-700 mb-2">Unable to Load Tickets</h2>
+        <p className="text-red-600">{error}</p>
+        <Button 
+          onClick={() => window.location.reload()} 
+          className="mt-4 bg-red-600 hover:bg-red-700 text-white"
+        >
+          Try Again
+        </Button>
+      </div>
     </div>
   );
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-6">
-      <div className="text-center mb-8">
+      <header className="text-center mb-8">
         <h1 className="text-3xl font-bold mb-6 flex items-center justify-center">
-          <Ticket className="w-6 h-6 mr-2 text-indigo-600" />
+          <Ticket className="w-7 h-7 mr-2 text-indigo-600" />
           My Tickets
         </h1>
         
-        {/* Filter tabs */}
-        <div className="inline-flex rounded-md shadow-sm p-1 bg-gray-100 mb-6">
+        {/* Filter tabs with counts */}
+        <div className="inline-flex rounded-lg shadow-sm p-1 bg-gray-100 mb-6">
           <button
             onClick={() => setActiveFilter("all")}
-            className={`px-4 py-2 text-sm font-medium rounded-md ${
+            className={`px-4 py-2.5 text-sm font-medium rounded-md transition-all flex items-center ${
               activeFilter === "all" 
                 ? "bg-white text-indigo-700 shadow-sm" 
                 : "text-gray-700 hover:bg-gray-50"
             }`}
           >
             All
+            <span className="ml-1.5 inline-flex items-center justify-center bg-gray-200 text-gray-700 rounded-full w-6 h-6 text-xs">
+              {allCount}
+            </span>
           </button>
           <button
             onClick={() => setActiveFilter("active")}
-            className={`px-4 py-2 text-sm font-medium rounded-md ${
+            className={`px-4 py-2.5 text-sm font-medium rounded-md transition-all flex items-center ${
               activeFilter === "active" 
                 ? "bg-white text-indigo-700 shadow-sm" 
                 : "text-gray-700 hover:bg-gray-50"
             }`}
           >
             Active
+            <span className="ml-1.5 inline-flex items-center justify-center bg-green-100 text-green-700 rounded-full w-6 h-6 text-xs">
+              {activeCount}
+            </span>
           </button>
           <button
             onClick={() => setActiveFilter("used")}
-            className={`px-4 py-2 text-sm font-medium rounded-md ${
+            className={`px-4 py-2.5 text-sm font-medium rounded-md transition-all flex items-center ${
               activeFilter === "used" 
                 ? "bg-white text-indigo-700 shadow-sm" 
                 : "text-gray-700 hover:bg-gray-50"
             }`}
           >
             Used
+            <span className="ml-1.5 inline-flex items-center justify-center bg-blue-100 text-blue-700 rounded-full w-6 h-6 text-xs">
+              {usedCount}
+            </span>
           </button>
         </div>
-      </div>
+      </header>
 
       <div className="space-y-6">
         <AnimatePresence>
@@ -203,45 +261,58 @@ export default function CustomerTicketsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
-                className="bg-white rounded-xl shadow overflow-hidden border border-gray-200"
+                className={`bg-white rounded-xl shadow-md overflow-hidden border ${
+                  ticket.status === 'active' || ticket.status === 'valid' 
+                    ? 'border-green-200' 
+                    : ticket.status === 'used' 
+                      ? 'border-blue-200' 
+                      : ticket.status === 'cancelled' 
+                        ? 'border-red-200' 
+                        : 'border-gray-200'
+                }`}
               >
                 {/* Ticket header */}
                 <div 
-                  className="p-6 cursor-pointer"
+                  className={`p-5 cursor-pointer ${
+                    expandedTicket === ticket._id ? 'bg-gray-50' : ''
+                  }`}
                   onClick={() => toggleTicketExpand(ticket._id)}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
+                    <div className="space-y-1.5">
                       <div className="flex items-center gap-2 mb-1">
-                        <h2 className="text-xl font-semibold">{ticket.event?.title || 'Event'}</h2>
+                        <h2 className="text-xl font-semibold line-clamp-1">{ticket.event?.title || 'Event'}</h2>
                         {getStatusBadge(ticket.status)}
                       </div>
                       
-                      <div className="text-gray-600 flex items-center text-sm mb-1">
-                        <Calendar className="w-4 h-4 mr-1.5 text-gray-400" />
-                        <span>{formatShowTime(
-                          ticket.event?.startDate, 
-                          ticket.showTime || ticket.event?.startTime
-                        )}</span>
+                      <div className="text-gray-600 flex items-center text-sm">
+                        <CalendarIcon className="w-4 h-4 mr-1.5 text-gray-400 flex-shrink-0" />
+                        <span>{formatShowTime(ticket.event?.startDate, ticket.showTime)}</span>
                       </div>
                       
                       <div className="text-gray-600 flex items-center text-sm">
-                        <MapPin className="w-4 h-4 mr-1.5 text-gray-400" />
-                        <span>{ticket.event?.venue || 'Venue'}</span>
+                        <MapPin className="w-4 h-4 mr-1.5 text-gray-400 flex-shrink-0" />
+                        <span className="line-clamp-1">{ticket.event?.venue || 'Venue not specified'}</span>
+                      </div>
+
+                      <div className="text-gray-600 flex items-center text-sm">
+                        <Users className="w-4 h-4 mr-1.5 text-gray-400 flex-shrink-0" />
+                        <span>{ticket.headCount} {ticket.headCount > 1 ? 'tickets' : 'ticket'}</span>
                       </div>
                     </div>
                     
-                    <div className="flex sm:flex-col items-center sm:items-end gap-4 sm:gap-1">
+                    <div className="flex sm:flex-col items-center sm:items-end gap-3 sm:gap-1 mt-2 sm:mt-0">
                       <div className="text-indigo-600 font-semibold flex items-center">
-                        <Tag className="w-4 h-4 mr-1.5" />
+                        <CreditCard className="w-4 h-4 mr-1.5 flex-shrink-0" />
                         <span>₹{ticket.totalAmount?.toLocaleString() || '-'}</span>
                       </div>
                       
-                      <div className="text-gray-500 text-sm">
-                        {ticket.headCount > 1 ? `${ticket.headCount} tickets` : '1 ticket'}
+                      <div className="flex items-center text-gray-500 text-sm">
+                        <Clock className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" /> 
+                        <span>{formatDate(ticket.purchaseDate || ticket.createdAt).split(',')[0]}</span>
                       </div>
                       
-                      <div className="sm:hidden">
+                      <div className="sm:hidden ml-auto">
                         {expandedTicket === ticket._id ? (
                           <ChevronUp className="w-5 h-5 text-gray-400" />
                         ) : (
@@ -262,7 +333,7 @@ export default function CustomerTicketsPage() {
                       transition={{ duration: 0.3 }}
                       className="overflow-hidden border-t border-gray-100"
                     >
-                      <div className="p-6 pt-4 bg-indigo-50 bg-opacity-50">
+                      <div className="p-6 pt-4 bg-gray-50">
                         <div className="flex flex-col md:flex-row gap-6">
                           {/* QR code */}
                           <div className="flex flex-col items-center justify-center md:w-1/3">
@@ -315,40 +386,40 @@ export default function CustomerTicketsPage() {
                           {/* Ticket details */}
                           <div className="md:w-2/3 md:pl-4 border-t md:border-t-0 md:border-l border-gray-200 pt-4 md:pt-0">
                             <h3 className="font-medium text-gray-900 mb-3">Ticket Details</h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
                               <div>
-                                <div className="text-sm text-gray-500">Ticket Number</div>
-                                <div className="font-mono text-sm">{ticket.ticketNumber || '-'}</div>
+                                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Ticket Number</div>
+                                <div className="font-mono text-sm mt-1">{ticket.ticketNumber || '-'}</div>
                               </div>
                               
                               <div>
-                                <div className="text-sm text-gray-500">Purchase Date</div>
-                                <div>{formatDate(ticket.purchaseDate || ticket.createdAt)}</div>
+                                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Purchase Date</div>
+                                <div className="mt-1">{formatDate(ticket.purchaseDate || ticket.createdAt)}</div>
                               </div>
                               
                               <div>
-                                <div className="text-sm text-gray-500">Show Date</div>
-                                <div>{formatDate(ticket.event?.startDate)}</div>
+                                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Event Date</div>
+                                <div className="mt-1">{formatDate(ticket.event?.startDate)}</div>
                               </div>
                               
                               <div>
-                                <div className="text-sm text-gray-500">Show Time</div>
-                                <div>{ticket.showTime || ticket.event?.startTime || '-'}</div>
+                                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Show Time</div>
+                                <div className="mt-1">{ticket.showTime || formatTime(ticket.event?.startDate) || '-'}</div>
                               </div>
                               
                               <div>
-                                <div className="text-sm text-gray-500">Head Count</div>
-                                <div>{ticket.headCount || 1}</div>
+                                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Number of Tickets</div>
+                                <div className="mt-1">{ticket.headCount || 1}</div>
                               </div>
                               
                               <div>
-                                <div className="text-sm text-gray-500">Status</div>
-                                <div>{getStatusBadge(ticket.status)}</div>
+                                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Status</div>
+                                <div className="mt-1">{getStatusBadge(ticket.status)}</div>
                               </div>
                               
                               <div>
-                                <div className="text-sm text-gray-500">Payment Status</div>
-                                <div>{ticket.paymentStatus === 'completed' ? (
+                                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Payment Status</div>
+                                <div className="mt-1">{ticket.paymentStatus === 'completed' || ticket.paymentStatus === 'paid' ? (
                                   <span className="text-green-600 flex items-center text-sm">
                                     <CheckCircle className="w-3.5 h-3.5 mr-1" />Paid
                                   </span>
@@ -360,12 +431,13 @@ export default function CustomerTicketsPage() {
                               </div>
                               
                               <div>
-                                <div className="text-sm text-gray-500">Amount Paid</div>
-                                <div className="font-medium">₹{ticket.totalAmount?.toLocaleString() || '-'}</div>
+                                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Amount Paid</div>
+                                <div className="font-medium mt-1">₹{ticket.totalAmount?.toLocaleString() || '-'}</div>
                               </div>
                             </div>
                             
-                            {ticket.status === 'active' && (
+                            {/* Status-specific messages */}
+                            {(ticket.status === 'active' || ticket.status === 'valid') && (
                               <div className="mt-6 bg-green-50 rounded-lg p-4 border border-green-100">
                                 <div className="flex items-start">
                                   <CheckCircle className="w-5 h-5 text-green-500 mr-3 mt-0.5" />
@@ -406,6 +478,20 @@ export default function CustomerTicketsPage() {
                                 </div>
                               </div>
                             )}
+                            
+                            {ticket.status === 'expired' && (
+                              <div className="mt-6 bg-yellow-50 rounded-lg p-4 border border-yellow-100">
+                                <div className="flex items-start">
+                                  <AlertCircle className="w-5 h-5 text-yellow-500 mr-3 mt-0.5" />
+                                  <div>
+                                    <h4 className="font-medium text-yellow-800">Ticket has expired</h4>
+                                    <p className="text-sm text-yellow-600 mt-1">
+                                      This ticket is no longer valid as the event date has passed.
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -419,4 +505,4 @@ export default function CustomerTicketsPage() {
       </div>
     </div>
   );
-} 
+}
