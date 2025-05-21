@@ -19,7 +19,11 @@ const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 // Convert ISO date string to YYYY-MM-DD
 function formatDateToYYYYMMDD(dateString) {
   const date = new Date(dateString);
-  return date.toISOString().split('T')[0];
+  const year = date.getFullYear();
+  // Add 1 to month because getMonth() returns 0-11
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 // Get calendar days for month view

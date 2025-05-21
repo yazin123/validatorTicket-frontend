@@ -666,7 +666,7 @@ export default function CreateEventPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-8 bg-white rounded-2xl shadow-2xl border border-gray-100 mt-8 animate-fadeIn">
+    <div className="max-w-9xl mx-auto p-8 bg-white rounded-2xl shadow-2xl border border-gray-100 mt-8 animate-fadeIn">
       <h1 className="text-4xl font-extrabold mb-8 text-center text-blue-700 tracking-tight">Create Event</h1>
       
       {/* Calendar view for managing shows */}

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Html5Qrcode } from 'html5-qrcode'
 import { toast } from 'react-hot-toast'
 import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/Button'
 import { ExclamationTriangleIcon, CameraIcon, CheckIcon, XCircleIcon } from '@heroicons/react/24/outline'
 
 export function QRScanner({ onScan, onError }) {

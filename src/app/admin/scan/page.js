@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { QRScanner } from '@/components/scanner/QRScanner';
 import { TicketVerification } from '@/components/scanner/TicketVerification';
 import { Camera, Ticket, FileDigit, Check, X, User, CalendarIcon } from 'lucide-react';
+import { ThermalTicketPrinter } from '@/components/scanner/ThermalTicketPrinter';
 
 export default function ScanTicketsPage() {
   const [manualCode, setManualCode] = useState('');
@@ -21,6 +22,39 @@ export default function ScanTicketsPage() {
   const [selectedEvent, setSelectedEvent] = useState('');
   const [isMobile, setIsMobile] = useState(false);
   const resultRef = useRef(null);
+  const [showThermalPrinter, setShowThermalPrinter] = useState(false);
+  const [selectedTicket, setSelectedTicket] = useState(null);
+
+  const handleOpenThermalPrinter = (ticket) => {
+    // Make sure we have a proper ticket object with all necessary properties
+    if (!ticket) {
+      toast.error('No ticket data available to print');
+      return;
+    }
+
+    // Add additional properties needed for the receipt if they don't exist
+    const enrichedTicket = {
+      ...ticket,
+      // If qrCode is missing, we can create a placeholder (though ideally this should come from backend)
+      qrCode: ticket.qrCode || createPlaceholderQRCode(ticket.ticketId),
+      // Ensure we have a ticketNumber property (fallback to ticketId if needed)
+      ticketNumber: ticket.ticketNumber || ticket.ticketId || 'N/A'
+    };
+
+    setSelectedTicket(enrichedTicket);
+    setShowThermalPrinter(true);
+  };
+
+  // Helper function to create a basic placeholder QR code
+  const createPlaceholderQRCode = (id) => {
+    // This creates a simple data URL for a placeholder QR code
+    // In a real app, you would generate a proper QR code, but this ensures something is shown
+    return `data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Crect fill='%23f0f0f0' width='160' height='160'/%3E%3Ctext fill='%23999' font-family='sans-serif' font-size='14' dy='.3em' text-anchor='middle' x='80' y='80'%3ETicket ID: ${id}%3C/text%3E%3C/svg%3E`;
+  };
+
+  const handleCloseThermalPrinter = () => {
+    setShowThermalPrinter(false);
+  };
 
   // Sound references
   const successSoundRef = '/sounds/yay.mp3';
@@ -33,7 +67,7 @@ export default function ScanTicketsPage() {
       const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
       setIsMobile(isMobile);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -89,10 +123,10 @@ export default function ScanTicketsPage() {
     try {
       setLoading(true);
       setScanResult(null);
-      
+
       // Process the QR code data - any format should now work with our improved endpoint
       let processedQrData = qrData;
-      
+
       if (typeof qrData === 'string') {
         // For string types, just pass as-is, backend will handle all formats:
         // - Data URLs
@@ -104,18 +138,18 @@ export default function ScanTicketsPage() {
         // If it's an object, we'll pass it as-is
         console.log('Processing object QR data');
       }
-      
+
       console.log('Verifying ticket');
-      
+
       // Send the data to the API
-      const response = await api.post('/tickets/verify', { 
-        qrData: processedQrData, 
-        eventId: selectedEvent 
+      const response = await api.post('/tickets/verify', {
+        qrData: processedQrData,
+        eventId: selectedEvent
       });
 
       // Additional data needed for complete ticket info
       let tickets = response.data.tickets || [];
-      
+
       // For each ticket, fetch additional details if they're not already provided
       if (tickets.length > 0) {
         // Use Promise.all to fetch all ticket details in parallel
@@ -124,12 +158,12 @@ export default function ScanTicketsPage() {
           if (ticket.headCount && ticket.totalAmount && ticket.paymentStatus) {
             return ticket;
           }
-          
+
           // Otherwise, try to fetch more details
           try {
             const detailsResponse = await api.get(`/tickets/${ticket.ticketId}`);
             const fullTicket = detailsResponse.data.data;
-            
+
             // Merge the ticket info with the verification info
             return {
               ...ticket,
@@ -276,7 +310,7 @@ export default function ScanTicketsPage() {
           <h2 className="text-xl font-bold">Event Verification Receipt</h2>
           <p className="text-sm text-gray-600">Generated {new Date().toLocaleString()}</p>
         </div>
-        
+
         {/* User Info Panel */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 sm:p-6 print:bg-white print:text-black print:border-b-2 print:border-gray-400">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -316,13 +350,31 @@ export default function ScanTicketsPage() {
             <p className="text-center py-4 text-gray-500">No event tickets found</p>
           ) : (
             <div className="space-y-4">
+              <button
+                onClick={() => {
+                  // Check if there are tickets to print
+                  if (tickets && tickets.length > 0) {
+                    // Pass the first ticket to the printer
+                    handleOpenThermalPrinter(tickets[0]);
+                  } else {
+                    toast.error('No ticket data available to print');
+                  }
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 text-xs rounded-full font-medium flex items-center"
+                size="sm"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                Print Receipt
+              </button>
               {tickets.map((ticket) => (
                 <div key={`${ticket.ticketId}-${ticket.eventId}`}
                   className={`border rounded-lg p-4 ${ticket.status === 'attended'
-                      ? 'bg-green-50 border-green-200'
-                      : ticket.canVerify
-                        ? 'bg-white border-gray-200'
-                        : 'bg-gray-50 border-gray-200'
+                    ? 'bg-green-50 border-green-200'
+                    : ticket.canVerify
+                      ? 'bg-white border-gray-200'
+                      : 'bg-gray-50 border-gray-200'
                     } print:break-inside-avoid print:border-none print:p-4`}
                 >
                   {/* Professional Ticket Header */}
@@ -331,12 +383,14 @@ export default function ScanTicketsPage() {
                       <h5 className="font-bold text-lg">{ticket.eventTitle}</h5>
                       <div className="mt-1 sm:mt-0">
                         <span className={`inline-block px-3 py-1 text-xs rounded-full font-medium
-                          ${ticket.status === 'attended' ? 'bg-green-100 text-green-800' : 
-                            ticket.status === 'active' || ticket.status === 'registered' ? 'bg-blue-100 text-blue-800' : 
-                            'bg-gray-100 text-gray-800'}`}>
+                          ${ticket.status === 'attended' ? 'bg-green-100 text-green-800' :
+                            ticket.status === 'active' || ticket.status === 'registered' ? 'bg-blue-100 text-blue-800' :
+                              'bg-gray-100 text-gray-800'}`}>
                           {ticket.status.toUpperCase()}
                         </span>
+
                       </div>
+
                     </div>
                     <p className="text-sm text-gray-600 mt-1 font-mono">{ticket.ticketId}</p>
                   </div>
@@ -355,7 +409,7 @@ export default function ScanTicketsPage() {
                             <p>to {formatDate(ticket.endDate)}</p>
                           </div>
                         </div>
-                        
+
                         {/* Venue */}
                         <div className="flex items-start">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-blue-500 print:text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -367,7 +421,7 @@ export default function ScanTicketsPage() {
                             <p>{ticket.eventVenue || 'Not specified'}</p>
                           </div>
                         </div>
-                        
+
                         {/* Headcount */}
                         <div className="flex items-start">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-blue-500 print:text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -378,7 +432,7 @@ export default function ScanTicketsPage() {
                             <p>{ticket.headCount || 1} {ticket.headCount > 1 ? 'persons' : 'person'}</p>
                           </div>
                         </div>
-                        
+
                         {/* Payment */}
                         <div className="flex items-start">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-blue-500 print:text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -390,9 +444,9 @@ export default function ScanTicketsPage() {
                               <span>{ticket.totalAmount ? `$${ticket.totalAmount.toFixed(2)}` : 'N/A'}</span>
                               {ticket.paymentStatus && (
                                 <span className={`ml-2 text-xs px-2 py-0.5 rounded-full
-                                  ${ticket.paymentStatus === 'completed' ? 'bg-green-100 text-green-800' : 
-                                    ticket.paymentStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                    'bg-gray-100 text-gray-800'}`}>
+                                  ${ticket.paymentStatus === 'completed' ? 'bg-green-100 text-green-800' :
+                                    ticket.paymentStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                      'bg-gray-100 text-gray-800'}`}>
                                   {ticket.paymentStatus}
                                 </span>
                               )}
@@ -400,13 +454,13 @@ export default function ScanTicketsPage() {
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Verification Info */}
                       {ticket.verifiedAt && (
                         <div className="border-t pt-3 mt-2">
                           <p className="text-sm flex items-center text-gray-500">
                             <Check size={14} className="mr-1 text-green-500" />
-                            Verified on {formatDate(ticket.verifiedAt)} 
+                            Verified on {formatDate(ticket.verifiedAt)}
                             {ticket.verifiedBy && ` by ${ticket.verifiedBy}`}
                           </p>
                         </div>
@@ -441,7 +495,7 @@ export default function ScanTicketsPage() {
                           Not assigned to this event
                         </div>
                       )}
-                      
+
                       {!ticket.isEventActive && (
                         <div className="text-xs text-gray-700 bg-gray-100 px-2 py-1 rounded text-center mt-2">
                           Event not active
@@ -449,7 +503,7 @@ export default function ScanTicketsPage() {
                       )}
                     </div>
                   </div>
-                  
+
                   {/* Print-only verification signature section */}
                   <div className="hidden print:block mt-8 pt-4 border-t border-dashed">
                     <div className="flex justify-between">
@@ -468,26 +522,12 @@ export default function ScanTicketsPage() {
             </div>
           )}
         </div>
-        
+
         {/* Print-only footer with terms */}
         <div className="hidden print:block p-4 border-t text-xs text-gray-500 text-center">
           <p>This verification receipt confirms the ticket holder's attendance at the event.</p>
           <p>For any inquiries, please contact the event organizer.</p>
           <p className="mt-2">{window.location.hostname} • {new Date().toLocaleString()}</p>
-        </div>
-        
-        {/* Print button - only visible on screen */}
-        <div className="p-4 border-t flex justify-end print:hidden">
-          <Button
-            onClick={() => window.print()}
-            className="bg-gray-100 hover:bg-gray-200 text-gray-800"
-            size="sm"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-            </svg>
-            Print Ticket Receipt
-          </Button>
         </div>
       </div>
     );
@@ -496,7 +536,7 @@ export default function ScanTicketsPage() {
   return (
     <div className="max-w-9xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Event select dropdown - fixed at top on mobile */}
-      <div className="sticky top-0 z-10 bg-white px-2 py-3 mb-3 sm:mb-6 border-b border-gray-200 sm:border-none sm:static sm:bg-transparent sm:p-0">
+      <div className=" bg-white px-2 py-3 mb-3 sm:mb-6 border-b border-gray-200 sm:border-none sm:static sm:bg-transparent sm:p-0">
         <label className="block font-semibold mb-1 text-base sm:text-lg">Select Event <span className="text-red-500">*</span></label>
         <select
           className="input w-full max-w-md text-sm sm:text-base p-2 border border-gray-300 rounded-lg"
@@ -511,7 +551,7 @@ export default function ScanTicketsPage() {
           ))}
         </select>
       </div>
-      
+
       {/* Header with animated gradient */}
       <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white p-4 sm:p-6 shadow-lg">
         <div
@@ -685,6 +725,15 @@ export default function ScanTicketsPage() {
             </span>
           </div>
         </div>
+      )}
+
+      {showThermalPrinter && selectedTicket && (
+        <ThermalTicketPrinter
+          ticket={selectedTicket}
+          user={scanResult?.user}
+          selectedEvent={events.find(e => e._id === selectedEvent)}
+          onClose={handleCloseThermalPrinter}
+        />
       )}
 
       {/* Add CSS for animations */}

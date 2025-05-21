@@ -21,23 +21,21 @@ import {
   User
 } from 'lucide-react';
 
-export default function Sidebar({ role = 'admin' }) {
+export default function Sidebar({ role = 'admin', mobileOpen, setMobileOpen }) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // Handle responsive collapse and mobile menu
+  // Handle responsive collapse 
   useEffect(() => {
     setMounted(true);
     
     const handleResize = () => {
-      if (window.innerWidth < 768) {
+      // Don't force collapse on mobile - let user control it
+      // We'll only set default state on initial load
+      if (!mounted && window.innerWidth < 768) {
         setCollapsed(true);
-        setMobileOpen(false);
-      } else {
-        setMobileOpen(false);
       }
     };
     
@@ -45,12 +43,14 @@ export default function Sidebar({ role = 'admin' }) {
     handleResize();
     
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [mounted]);
 
   // Close mobile menu when navigating
   useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
+    if (setMobileOpen) {
+      setMobileOpen(false);
+    }
+  }, [pathname, setMobileOpen]);
 
   // Navigation items based on role
   const adminNavItems = [
@@ -142,23 +142,15 @@ export default function Sidebar({ role = 'admin' }) {
       {mobileOpen && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden" 
-          onClick={() => setMobileOpen(false)}
+          onClick={() => setMobileOpen && setMobileOpen(false)}
         />
       )}
-
-      {/* Mobile menu button */}
-      <button
-        onClick={() => setMobileOpen(true)}
-        className="fixed top-4 left-4 p-2 rounded-md bg-white shadow-md z-10 lg:hidden"
-      >
-        <Menu size={24} />
-      </button>
 
       {/* Sidebar */}
       <aside 
         className={`bg-white fixed inset-y-0 left-0 shadow-md z-30 flex flex-col transition-all duration-300 ease-in-out
           ${mobileOpen ? 'transform-none' : '-translate-x-full lg:translate-x-0'}
-          ${collapsed ? 'w-16 lg:w-20' : 'w-64'}`
+          ${collapsed ? 'w-16 lg:w-20' : 'w-72 max-w-[85vw] lg:w-64'}`
         }
       >
         <div className="flex flex-col h-full overflow-hidden">
@@ -177,17 +169,17 @@ export default function Sidebar({ role = 'admin' }) {
               {/* Mobile close button */}
               {mobileOpen && (
                 <button
-                  onClick={() => setMobileOpen(false)}
+                  onClick={() => setMobileOpen && setMobileOpen(false)}
                   className="p-1 rounded-full hover:bg-gray-100 lg:hidden"
                 >
                   <X size={18} />
                 </button>
               )}
               
-              {/* Collapse/expand button */}
+              {/* Collapse/expand button for both mobile and desktop */}
               <button
                 onClick={() => setCollapsed(!collapsed)}
-                className="p-1 rounded-full text-gray-500 hover:bg-gray-100 hidden lg:block"
+                className="p-1 rounded-full text-gray-500 hover:bg-gray-100"
               >
                 {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
               </button>
@@ -214,7 +206,7 @@ export default function Sidebar({ role = 'admin' }) {
                         {item.icon}
                       </span>
                       {!collapsed && (
-                        <span className="ml-3 whitespace-nowrap">{item.name}</span>
+                        <span className="ml-3 whitespace-nowrap text-sm">{item.name}</span>
                       )}
                     </Link>
                   </li>
@@ -276,10 +268,10 @@ export default function Sidebar({ role = 'admin' }) {
         </div>
       </aside>
       
-      {/* Main content wrapper to create proper spacing */}
+      {/* Main content wrapper to create proper spacing - only on lg screens */}
       <div 
         className={`
-          transition-all duration-300 ease-in-out
+          hidden lg:block transition-all duration-300 ease-in-out
           ${collapsed ? 'lg:ml-20' : 'lg:ml-64'}
         `}
       >
